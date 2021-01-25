@@ -19,6 +19,7 @@ void Move::_calculateAlgebraicNotation() {
         else if (_promotionResult == PieceType::KNIGHT) {
             _algebraicNotation += 'n';
         }
+        log::out << "ELIELIELI ======= algebraic: " << _algebraicNotation << " sourcecol: " << _source.col << " sourcerow: " << _source.row << " targetcol: " << _target.col << " targetrow: " << _target.row << std::endl; log::flush();
     }
 }
 
@@ -44,4 +45,14 @@ void Move::_calculateInternalValues() {
 
 void Move::_calculateIsCastle() {
     _isCastle = (_pieceType == PieceType::KING && _source.row == _target.row && abs(_source.col - _target.col) > 1);
+}
+
+void Move::setHasPromotion(bool val) {
+    _hasPromotion = val;
+    _calculateAlgebraicNotation();
+}
+
+void Move::setPromotionResult(PieceType val) {
+    _promotionResult = val;
+    _calculateAlgebraicNotation();
 }

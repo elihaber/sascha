@@ -58,6 +58,17 @@ void Engine::_handleInputQueue() {
                     }
                 }
             }
+            else if (realMessage->fenFlag()) {
+                _board = std::make_shared<Board>(_whitePlayer, _blackPlayer);
+                _board->setUpFromFen(realMessage->fen());
+                if (realMessage->movesFlag()) {
+                    auto moves = realMessage->moves();
+                    for (auto & move : moves) {
+                        _board->handleMoveAlgebraic(move);
+                    }
+                }
+            }
+
         }
 
         if (message->messageType() == MessageType::GO) {

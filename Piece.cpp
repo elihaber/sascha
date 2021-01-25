@@ -60,24 +60,24 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
 
     if (_color == Color::WHITE) {
         if (_board->whitePlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 0)) && !_board->isSquareAttacked(Position(5, 0)) && _board->isSquareEmpty(Position(6, 0)) && !_board->isSquareAttacked(Position(6, 0))) {
+            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 0)) && !_board->isSquareAttacked(Position(5, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 0)) && !_board->isSquareAttacked(Position(6, 0), oppositeColor(_color))) {
                 potentialTargets.push_back(Position(6, 0));
             }
         }
         if (_board->whitePlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 0)) && !_board->isSquareAttacked(Position(3, 0)) && _board->isSquareEmpty(Position(2, 0)) && !_board->isSquareAttacked(Position(2, 0)) && _board->isSquareEmpty(Position(1, 0))) {
+            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 0)) && !_board->isSquareAttacked(Position(3, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 0)) && !_board->isSquareAttacked(Position(2, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 0))) {
                 potentialTargets.push_back(Position(2, 0));
             }
         }
     }
     else {
         if (_board->blackPlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 7)) && !_board->isSquareAttacked(Position(5, 7)) && _board->isSquareEmpty(Position(6, 7)) && !_board->isSquareAttacked(Position(6, 7))) {
+            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 7)) && !_board->isSquareAttacked(Position(5, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 7)) && !_board->isSquareAttacked(Position(6, 7), oppositeColor(_color))) {
                 potentialTargets.push_back(Position(6, 0));
             }
         }
         if (_board->blackPlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 7)) && !_board->isSquareAttacked(Position(3, 7)) && _board->isSquareEmpty(Position(2, 7)) && !_board->isSquareAttacked(Position(2, 7)) && _board->isSquareEmpty(Position(1, 7))) {
+            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 7)) && !_board->isSquareAttacked(Position(3, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 7)) && !_board->isSquareAttacked(Position(2, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 7))) {
                 potentialTargets.push_back(Position(2, 0));
             }
         }
@@ -85,7 +85,9 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
 
     for (const auto & target : potentialTargets) {
         auto move = std::make_shared<Move>(_position, target, _pieceType);
-        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(move)) {
+        log::out << "ELI CHECKING KING MOVE " << move->algebraicNotation() << std::endl; log::flush();
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && !_board->isSquareAttacked(target, oppositeColor(_color)) && _board->testMoveForLegality(move)) {
+            log::out << "ELI ADDING KING MOVE " << move->algebraicNotation() << std::endl; log::flush();
             possibleMoves.push_back(move);
         }
     }
@@ -399,27 +401,66 @@ void Knight::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves
 
 void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const {
     std::vector<std::shared_ptr<Move>> potentialMoves;
-    std::vector<Position> potentialTargets;
 
     if (_color == Color::WHITE) {
         auto target = Position(_position.col, _position.row + 1);
         if (_board->isSquareEmpty(target)) {
-            potentialTargets.push_back(target);
+            if (target.row != 7) {
+                potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+            }
+            else {
+                auto move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::KNIGHT);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::BISHOP);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::ROOK);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::QUEEN);
+                potentialMoves.push_back(move);
+            }
             target = Position(_position.col, _position.row + 2);
             if (_position.row == 1 && _board->isSquareEmpty(target)) {
-                potentialTargets.push_back(target);
+                potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
             }
         }
         if (_position.col > 0) {
             target = Position(_position.col - 1, _position.row + 1);
             if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-                potentialTargets.push_back(target);
+                if (target.row != 7) {
+                    potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::BISHOP);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::ROOK);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::QUEEN);
+                    potentialMoves.push_back(move);
+                }
             }
             else {
                 Position enPassantTarget;
                 if (_board->enPassantTarget(enPassantTarget)) {
                     if (enPassantTarget == target) {
-                        potentialTargets.push_back(target);
+                        potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
                     }
                 }
             }
@@ -427,13 +468,33 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
         if (_position.col < 7) {
             target = Position(_position.col + 1, _position.row + 1);
             if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-                potentialTargets.push_back(target);
+                if (target.row != 7) {
+                    potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::BISHOP);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::ROOK);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::QUEEN);
+                    potentialMoves.push_back(move);
+                }
             }
             else {
                 Position enPassantTarget;
                 if (_board->enPassantTarget(enPassantTarget)) {
                     if (enPassantTarget == target) {
-                        potentialTargets.push_back(target);
+                        potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
                     }
                 }
             }
@@ -442,22 +503,62 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
     else {
         auto target = Position(_position.col, _position.row - 1);
         if (_board->isSquareEmpty(target)) {
-            potentialTargets.push_back(target);
+            if (target.row != 0) {
+                potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+            }
+            else {
+                auto move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::KNIGHT);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::BISHOP);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::ROOK);
+                potentialMoves.push_back(move);
+                move = std::make_shared<Move>(_position, target, _pieceType);
+                move->setHasPromotion(true);
+                move->setPromotionResult(PieceType::QUEEN);
+                potentialMoves.push_back(move);
+            }
             target = Position(_position.col, _position.row - 2);
             if (_position.row == 6 && _board->isSquareEmpty(target)) {
-                potentialTargets.push_back(target);
+                potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
             }
         }
         if (_position.col > 0) {
             target = Position(_position.col - 1, _position.row - 1);
             if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-                potentialTargets.push_back(target);
+                if (target.row != 0) {
+                    potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::BISHOP);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::ROOK);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::QUEEN);
+                    potentialMoves.push_back(move);
+                }
             }
             else {
                 Position enPassantTarget;
                 if (_board->enPassantTarget(enPassantTarget)) {
                     if (enPassantTarget == target) {
-                        potentialTargets.push_back(target);
+                        potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
                     }
                 }
             }
@@ -465,51 +566,42 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
         if (_position.col < 7) {
             target = Position(_position.col + 1, _position.row - 1);
             if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-                potentialTargets.push_back(target);
+                if (target.row != 0) {
+                    potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::BISHOP);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::ROOK);
+                    potentialMoves.push_back(move);
+                    move = std::make_shared<Move>(_position, target, _pieceType);
+                    move->setHasPromotion(true);
+                    move->setPromotionResult(PieceType::QUEEN);
+                    potentialMoves.push_back(move);
+                }
             }
             else {
                 Position enPassantTarget;
                 if (_board->enPassantTarget(enPassantTarget)) {
                     if (enPassantTarget == target) {
-                        potentialTargets.push_back(target);
+                        potentialMoves.push_back(std::make_shared<Move>(_position, target, _pieceType));
                     }
                 }
             }
         }
     }
 
-    for (const auto & target : potentialTargets) {
-        if (target.row != 0 && target.row != 7) {
-            auto move = std::make_shared<Move>(_position, target, _pieceType);
-            if (_board->testMoveForLegality(move)) {
-                possibleMoves.push_back(move);
-            }
-        }
-        else {
-            auto move = std::make_shared<Move>(_position, target, _pieceType);
-            move->setHasPromotion(true);
-            move->setPromotionResult(PieceType::KNIGHT);
-            if (_board->testMoveForLegality(move)) {
-                possibleMoves.push_back(move);
-            }
-            move = std::make_shared<Move>(_position, target, _pieceType);
-            move->setHasPromotion(true);
-            move->setPromotionResult(PieceType::BISHOP);
-            if (_board->testMoveForLegality(move)) {
-                possibleMoves.push_back(move);
-            }
-            move = std::make_shared<Move>(_position, target, _pieceType);
-            move->setHasPromotion(true);
-            move->setPromotionResult(PieceType::ROOK);
-            if (_board->testMoveForLegality(move)) {
-                possibleMoves.push_back(move);
-            }
-            move = std::make_shared<Move>(_position, target, _pieceType);
-            move->setHasPromotion(true);
-            move->setPromotionResult(PieceType::QUEEN);
-            if (_board->testMoveForLegality(move)) {
-                possibleMoves.push_back(move);
-            }
+    for (const auto & move : potentialMoves) {
+        if (_board->testMoveForLegality(move)) {
+            possibleMoves.push_back(move);
         }
     }
 }

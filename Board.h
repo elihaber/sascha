@@ -20,7 +20,7 @@ public:
     void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const;
     bool scanForCheck(bool otherPlayer = false);
     bool isCheck() const { return _isCheck; }
-    bool isSquareAttacked(const Position & square) const;
+    bool isSquareAttacked(const Position & square, Color attackerColor) const;
     bool canSquaresSeeEachOtherOnColumn(Position pos1, Position pos2);
     bool canSquaresSeeEachOtherOnRow(Position pos1, Position pos2);
     bool canSquaresSeeEachOtherOnDiagonalUp(Position pos1, Position pos2);

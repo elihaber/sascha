@@ -162,6 +162,7 @@ void Board::setUpStartingPosition() {
 }
 
 void Board::handleMove(const std::shared_ptr<Move> & move) {
+    log::out << "Handling move " << move->algebraicNotation() << std::endl; log::flush();
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -425,21 +426,20 @@ bool Board::scanForCheck(bool otherPlayer) {
     }
 
     log::out << "Checking if king on square " << king->position().col << "," << king->position().row << " is attacked" << std::endl; log::flush();
-    return isSquareAttacked(king->position());
+    return isSquareAttacked(king->position(), oppositeColor(king->color()));
 }
 
 void Board::calculateLegalMoves(std::vector<std::shared_ptr<Move>> moves) const {
 
 }
 
-bool Board::isSquareAttacked(const Position & square) const {
+bool Board::isSquareAttacked(const Position & square, Color attackerColor) const {
     int squareCol = square.col;
     int squareRow = square.row;
-    Color colorOfPieceOnSquare = _pieces[Position::internalToIndex(square)]->color();
 
     log::out << "Checking if position " << squareCol << "," << squareRow << " is attacked by " << _pieces.size() << " pieces" << std::endl; log::flush();
     for (auto piece : _pieces) {
-        if (piece->pieceType() == PieceType::BLANK || piece->color() == colorOfPieceOnSquare) {
+        if (piece->pieceType() == PieceType::BLANK || piece->color() != attackerColor) {
             continue;
         }
         if (piece->isAttackingSquare(square)) {

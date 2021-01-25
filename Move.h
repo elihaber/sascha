@@ -17,8 +17,8 @@ public:
     std::string algebraicNotation() const { return _algebraicNotation; }
     bool hasPromotion() const { return _hasPromotion; }
     PieceType promotionResult() const { return _promotionResult; }
-    void setHasPromotion(bool val) { _hasPromotion = val; }
-    void setPromotionResult(PieceType val) { _promotionResult = val; }
+    void setHasPromotion(bool val);
+    void setPromotionResult(PieceType val);
     bool isCastle() const { return _isCastle; }
 private:
     void _calculateAlgebraicNotation();
