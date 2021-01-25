@@ -18,8 +18,6 @@ void OutputHandler::start(std::future<void> futureObj) {
     std::string line;
 
     while (futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout) {
-        log::out << "Output thread loop " << this << std::endl; log::flush();
-
         auto message = _outgoingMessages.readNextMessage();
         if (message->messageType() != MessageType::NONE) {
             std::stringstream line;
@@ -37,7 +35,6 @@ void OutputHandler::start(std::future<void> futureObj) {
 }
 
 void OutputHandler::end() {
-           log::out << "Output thread end call " << this << std::endl; log::flush();
     _endFlag = true;
 }
 
