@@ -410,27 +410,31 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
                 potentialTargets.push_back(target);
             }
         }
-        target = Position(_position.col - 1, _position.row + 1);
-        if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-            potentialTargets.push_back(target);
-        }
-        else {
-            Position enPassantTarget;
-            if (_board->enPassantTarget(enPassantTarget)) {
-                if (enPassantTarget == target) {
-                    potentialTargets.push_back(target);
+        if (_position.col > 0) {
+            target = Position(_position.col - 1, _position.row + 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                potentialTargets.push_back(target);
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        potentialTargets.push_back(target);
+                    }
                 }
             }
         }
-        target = Position(_position.col + 1, _position.row + 1);
-        if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-            potentialTargets.push_back(target);
-        }
-        else {
-            Position enPassantTarget;
-            if (_board->enPassantTarget(enPassantTarget)) {
-                if (enPassantTarget == target) {
-                    potentialTargets.push_back(target);
+        if (_position.col < 7) {
+            target = Position(_position.col + 1, _position.row + 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                potentialTargets.push_back(target);
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        potentialTargets.push_back(target);
+                    }
                 }
             }
         }
@@ -444,27 +448,31 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
                 potentialTargets.push_back(target);
             }
         }
-        target = Position(_position.col - 1, _position.row - 1);
-        if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-            potentialTargets.push_back(target);
-        }
-        else {
-            Position enPassantTarget;
-            if (_board->enPassantTarget(enPassantTarget)) {
-                if (enPassantTarget == target) {
-                    potentialTargets.push_back(target);
+        if (_position.col > 0) {
+            target = Position(_position.col - 1, _position.row - 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                potentialTargets.push_back(target);
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        potentialTargets.push_back(target);
+                    }
                 }
             }
         }
-        target = Position(_position.col + 1, _position.row - 1);
-        if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
-            potentialTargets.push_back(target);
-        }
-        else {
-            Position enPassantTarget;
-            if (_board->enPassantTarget(enPassantTarget)) {
-                if (enPassantTarget == target) {
-                    potentialTargets.push_back(target);
+        if (_position.col < 7) {
+            target = Position(_position.col + 1, _position.row - 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                potentialTargets.push_back(target);
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        potentialTargets.push_back(target);
+                    }
                 }
             }
         }
