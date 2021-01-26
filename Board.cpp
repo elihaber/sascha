@@ -2,7 +2,7 @@
 #include "Board.h"
 #include "Piece.h"
 #include "Move.h"
-#include "log.h"
+#include "Globals.h"
 
 void Board::setUpFromFen(const std::string & fen) {
     auto blankPiece =std::make_shared<BlankPiece>(shared_from_this());
@@ -162,7 +162,7 @@ void Board::setUpStartingPosition() {
 }
 
 void Board::handleMove(const std::shared_ptr<Move> & move) {
-    log::out << "Handling move " << move->algebraicNotation() << std::endl; log::flush();
+    MAINLOG("Handling move " << move->algebraicNotation())
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -392,13 +392,12 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
 
     _calculateFen();
     if (_fen.compare(_prevFen) != 0) {
-        log::out << "ERROR ERROR ERROR !!!!! Fen does not match after undo" << std::endl;
-        log::out << "Prev fen:" << std::endl;
-        log::out << _prevFen << std::endl;
-        log::out << "Fen after undo:" << std::endl;
-        log::out << _fen << std::endl;
-        log::out << "Move was " << move->algebraicNotation() << std::endl;
-        log::flush();
+        MAINLOG("ERROR ERROR ERROR !!!!! Fen does not match after undo")
+        MAINLOG("Prev fen:")
+        MAINLOG(_prevFen)
+        MAINLOG("Fen after undo:")
+        MAINLOG(_fen)
+        MAINLOG("Move was " << move->algebraicNotation())
     }
 }
 
@@ -406,9 +405,9 @@ bool Board::scanForCheck(bool otherPlayer) {
     // Find the king whose turn it is
     std::shared_ptr<Piece> king;
     if (!otherPlayer) {
-        log::out << "Looking for king that is of color " << (int)_whosTurnToGo << std::endl; log::flush();
+        MAINLOG("Looking for king that is of color " << (int)_whosTurnToGo)
     } else {
-        log::out << "Looking for king that is NOT of color " << (int)_whosTurnToGo << std::endl; log::flush();
+        MAINLOG("Looking for king that is NOT of color " << (int)_whosTurnToGo)
     }
     for (auto piece : _pieces) {
         if (!otherPlayer) {
@@ -425,7 +424,7 @@ bool Board::scanForCheck(bool otherPlayer) {
         }
     }
 
-    log::out << "Checking if king on square " << king->position().col << "," << king->position().row << " is attacked" << std::endl; log::flush();
+    MAINLOG("Checking if king on square " << king->position().col << "," << king->position().row << " is attacked")
     return isSquareAttacked(king->position(), oppositeColor(king->color()));
 }
 
@@ -437,17 +436,17 @@ bool Board::isSquareAttacked(const Position & square, Color attackerColor) const
     int squareCol = square.col;
     int squareRow = square.row;
 
-    log::out << "Checking if position " << squareCol << "," << squareRow << " is attacked by " << _pieces.size() << " pieces" << std::endl; log::flush();
+    MAINLOG("Checking if position " << squareCol << "," << squareRow << " is attacked by " << _pieces.size() << " pieces")
     for (auto piece : _pieces) {
         if (piece->pieceType() == PieceType::BLANK || piece->color() != attackerColor) {
             continue;
         }
         if (piece->isAttackingSquare(square)) {
-            log::out << "Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is attacking" << std::endl; log::flush();
+            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is attacking")
             return true;
         }
         else {
-            log::out << "Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is NOT attacking" << std::endl; log::flush();
+            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is NOT attacking")
         }
     }
     return false;
@@ -528,15 +527,15 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
         // Cannot capture a king!
         return false;
     }
-    log::out << "Testing move for legality: " << move->algebraicNotation() << std::endl; log::flush();
+    MAINLOG("Testing move for legality: " << move->algebraicNotation())
     handleMove(move);
-    log::out << "Player who is to move: " << (int)_whosTurnToGo << std::endl; log::flush();
+    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
     bool result = !scanForCheck(true);
     undoMove(move);
     if (result) {
-        log::out << "Move is legal" << std::endl; log::flush();
+        MAINLOG("Move is legal")
     } else {
-        log::out << "Move is not legal" << std::endl; log::flush();
+        MAINLOG("Move is not legal")
     }
     return result;
 }

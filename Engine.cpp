@@ -4,8 +4,8 @@
 #include "Message.h"
 #include "MessageQueue.h"
 #include "Board.h"
-#include "log.h"
 #include "Move.h"
+#include "Globals.h"
 
 using namespace std::chrono_literals;
 
@@ -13,7 +13,7 @@ void Engine::start() {
     srand (time(NULL));
     while (true) {
         if (_isDone) {
-            log::out << "Engine killing loop" << std::endl; log::flush();
+            MAINLOG("Engine killing loop")
             break;
         }
 
@@ -72,23 +72,23 @@ void Engine::_handleInputQueue() {
         }
 
         if (message->messageType() == MessageType::GO) {
-            log::out << "Handling go" << std::endl; log::flush();
+            MAINLOG("Handling go")
             std::vector<std::shared_ptr<Move>> possibleMoves;
             _board->getPossibleMoves(possibleMoves);
-            log::out << "Got " << possibleMoves.size() << " possible moves:";
+            MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
             for (size_t i = 0; i < possibleMoves.size(); ++i) {
-                log::out << " " << possibleMoves[i]->algebraicNotation();
+                MAINLOG_NNL(" " << possibleMoves[i]->algebraicNotation())
             }
-            log::out << std::endl; log::flush();
+            MAINLOG("");
             int randIndex = rand() % possibleMoves.size();
-            log::out << "Selected index " << randIndex << " which is " << possibleMoves[randIndex]->algebraicNotation() << std::endl; log::flush();
+            MAINLOG("Selected index " << randIndex << " which is " << possibleMoves[randIndex]->algebraicNotation())
             auto bestMoveMessage = std::make_shared<BestMoveMessage>();
             bestMoveMessage->setMove1(possibleMoves[randIndex]->algebraicNotation());
             _outgoingMessages.addMessage(bestMoveMessage);
         }
 
         if (message->messageType() == MessageType::QUIT) {
-            log::out << "Engine handling quit" << std::endl; log::flush();
+            MAINLOG("Engine handling quit")
             _isDone = true;
         }
     }
