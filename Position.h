@@ -105,7 +105,7 @@ public:
         return positions;
     }
 
-    bool operator ==(const Position & other) {
+    bool operator ==(const Position & other) const {
         return (col == other.col && row == other.row);
     }
 };

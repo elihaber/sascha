@@ -85,9 +85,7 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
 
     for (const auto & target : potentialTargets) {
         auto move = std::make_shared<Move>(_position, target, _pieceType);
-        log::out << "ELI CHECKING KING MOVE " << move->algebraicNotation() << std::endl; log::flush();
-        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && !_board->isSquareAttacked(target, oppositeColor(_color)) && _board->testMoveForLegality(move)) {
-            log::out << "ELI ADDING KING MOVE " << move->algebraicNotation() << std::endl; log::flush();
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) /* && !_board->isSquareAttacked(target, oppositeColor(_color)) */ && _board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
     }
@@ -609,10 +607,16 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
 void BlankPiece::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const { }
 
 bool King::isAttackingSquare(const Position & square) const {
+    if (square == _position) {
+        return false;
+    }
     return Position::areSquaresTouching(_position, square);
 }
 
 bool Queen::isAttackingSquare(const Position & square) const {
+    if (square == _position) {
+        return false;
+    }
     if (Position::areSquaresOnSameColumn(_position, square)) {
         if (_board->canSquaresSeeEachOtherOnColumn(_position, square)) {
             return true;
@@ -637,6 +641,9 @@ bool Queen::isAttackingSquare(const Position & square) const {
 }
 
 bool Rook::isAttackingSquare(const Position & square) const {
+    if (square == _position) {
+        return false;
+    }
     if (Position::areSquaresOnSameColumn(_position, square)) {
         if (_board->canSquaresSeeEachOtherOnColumn(_position, square)) {
             return true;
@@ -651,6 +658,9 @@ bool Rook::isAttackingSquare(const Position & square) const {
 }
 
 bool Bishop::isAttackingSquare(const Position & square) const {
+    if (square == _position) {
+        return false;
+    }
     if (Position::areSquaresOnSameDiagonalUp(_position, square)) {
         if (_board->canSquaresSeeEachOtherOnDiagonalUp(_position, square)) {
             return true;
@@ -665,11 +675,16 @@ bool Bishop::isAttackingSquare(const Position & square) const {
 }
 
 bool Knight::isAttackingSquare(const Position & square) const {
-    log::out << "Checking if knight on square " << _position.col << "," << _position.row << " is attacking square " << square.col << "," << square.row << std::endl; log::flush();
+    if (square == _position) {
+        return false;
+    }
     return Position::areSquaresKnightsMoveFromEachOther(_position, square);
 }
 
 bool Pawn::isAttackingSquare(const Position & square) const {
+    if (square == _position) {
+        return false;
+    }
     auto attackSquares = Position::getSquaresWherePawnCanAttack(square, _color);
     for (auto attackSquare : attackSquares) {
         if (attackSquare.col == _position.col && attackSquare.row == _position.row) {
