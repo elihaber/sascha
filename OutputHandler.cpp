@@ -10,7 +10,7 @@
 #include "OutputHandler.h"
 #include "Message.h"
 #include "MessageQueue.h"
-#include "log.h"
+#include "Globals.h"
 
 using namespace std::chrono_literals;
 
@@ -22,11 +22,11 @@ void OutputHandler::start(std::future<void> futureObj) {
         if (message->messageType() != MessageType::NONE) {
             std::stringstream line;
             if (_formatMessage(message, line)) {
-                log::out << "out << " << line.str() << std::endl; log::flush();
+                OUTPUTLOG("out << " << line.str())
                 std::cout << line.str() << std::endl;
             }
             else {
-                log::out << "Failed to format message for output" << std::endl; log::flush();
+                MAINLOG("Failed to format message for output")
             }
         }
 
@@ -51,7 +51,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             line << realMessage->author();
         }
         else {
-            log::out << "ID message without nameFlag or authorFlag" << std::endl; log::flush();
+            MAINLOG("ID message without nameFlag or authorFlag")
             return false;
         }
         return true;
@@ -71,14 +71,14 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
         std::shared_ptr<BestMoveMessage> realMessage = std::static_pointer_cast<BestMoveMessage>(message);
         line << "bestmove ";
         if (realMessage->move1().empty()) {
-            log::out << "BESTMOVE message with blank move1" << std::endl; log::flush();
+            MAINLOG("BESTMOVE message with blank move1")
             return false;
         }
         line << realMessage->move1();
         if (realMessage->ponderFlag()) {
             line << " ponder ";
             if (realMessage->move2().empty()) {
-                log::out << "BESTMOVE message with blank move2" << std::endl; log::flush();
+                MAINLOG("BESTMOVE message with blank move2")
                 return false;
             }
             line << realMessage->move2();
@@ -101,7 +101,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             line << "error";
         }
         else {
-            log::out << "COPYPROTECTION message without any flag" << std::endl; log::flush();
+            MAINLOG("COPYPROTECTION message without any flag")
             return false;
         }
         return true;
@@ -121,7 +121,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             line << "error";
         }
         else {
-            log::out << "REGISTRATION message without any flag" << std::endl; log::flush();
+            MAINLOG("REGISTRATION message without any flag")
             return false;
         }
         return true;
@@ -136,7 +136,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
         }
         if (realMessage->selDepthFlag()) {
             if (!realMessage->depthFlag()) {
-                log::out << "INFO message with selDepth flag but no depth flag" << std::endl; log::flush();
+                MAINLOG("INFO message with selDepth flag but no depth flag")
                 return false;
             }
             line << " seldepth";
@@ -144,7 +144,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
         }
         if (realMessage->timeFlag()) {
             if (!realMessage->pvFlag()) {
-                log::out << "INFO message with time flag but no pv flag" << std::endl; log::flush();
+                MAINLOG("INFO message with time flag but no pv flag")
                 return false;
             }
             line << " time";
@@ -158,7 +158,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             line << " pv";
             auto moves = realMessage->moves();
             if (moves.empty()) {
-                log::out << "INFO message with pv flag but no moves" << std::endl; log::flush();
+                MAINLOG("INFO message with pv flag but no moves")
                 return false;
             }
             for (int i = 0; i < moves.size(); ++i) {
@@ -186,13 +186,13 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
                 line << " upperbound";
             }
             else {
-                log::out << "INFO message with score flag but no score type flag" << std::endl; log::flush();
+                MAINLOG("INFO message with score flag but no score type flag")
                 return false;
             }
         }
         if (realMessage->currMoveFlag()) {
             if (!realMessage->currMove().empty()) {
-                log::out << "INFO message with currMove flag but no currMove" << std::endl; log::flush();
+                MAINLOG("INFO message with currMove flag but no currMove")
                 return false;
             }
             line << " currmove " << realMessage->currMove();
@@ -219,7 +219,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             line << " refutation";
             auto moves = realMessage->moves();
             if (moves.empty()) {
-                log::out << "INFO message with refutation flag but no moves" << std::endl; log::flush();
+                MAINLOG("INFO message with refutation flag but no moves")
                 return false;
             }
             for (int i = 0; i < moves.size(); ++i) {
@@ -233,7 +233,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
             }
             auto moves = realMessage->moves();
             if (moves.empty()) {
-                log::out << "INFO message with currLine flag but no moves" << std::endl; log::flush();
+                MAINLOG("INFO message with currLine flag but no moves")
                 return false;
             }
             for (int i = 0; i < moves.size(); ++i) {
@@ -248,20 +248,20 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
         line << "option";
 
         if (realMessage->name().empty()) {
-            log::out << "OPTION message with no name" << std::endl; log::flush();
+            MAINLOG("OPTION message with no name")
             return false;
         }
         line << " name " << realMessage->name();
 
         if (realMessage->optionType().empty()) {
-            log::out << "OPTION message with no optioneType" << std::endl; log::flush();
+            MAINLOG("OPTION message with no optioneType")
             return false;
         }
         line << " type " << realMessage->optionType();
 
         if (realMessage->defaultFlag()) {
             if (realMessage->defaultVal().empty()) {
-                log::out << "OPTION message with default flag but no default" << std::endl; log::flush();
+                MAINLOG("OPTION message with default flag but no default")
                 return false;
             }
             line << " default " << realMessage->defaultVal();
@@ -278,7 +278,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
         if (realMessage->varFlag()) {
             auto vars = realMessage->vars();
             if (vars.empty()) {
-                log::out << "OPTION message with var flag but no vars" << std::endl; log::flush();
+                MAINLOG("OPTION message with var flag but no vars")
                 return false;
             }
             line << " var";

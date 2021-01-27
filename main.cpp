@@ -5,20 +5,12 @@
 #include "OutputHandler.h"
 #include "MessageQueue.h"
 #include "Engine.h"
-#include "log.h"
+#include "Globals.h"
 
 using namespace std::chrono_literals;
 
 int main(int argc, char* argv[]) {
-   log::out << "Welcome to Sascha!" << std::endl << std::endl; log::flush();
-
-    bool res = Position::areSquaresKnightsMoveFromEachOther(Position(4,6), Position(2,5));
-    if (res) {
-        log::out << "ATTACK!" << std::endl; log::flush();
-    }
-    else {
-        log::out << "All clear!" << std::endl; log::flush();
-    }
+   MAINLOG("Welcome to Sascha!")
 
     std::promise<void> exitSignal1;
     std::future<void> futureObj1 = exitSignal1.get_future();
@@ -44,30 +36,30 @@ int main(int argc, char* argv[]) {
     std::thread outputThread(OutputHandler::start, outputHandler, std::move(futureObj2));
 
 //    while (true) {
-//        log::out << "Main checking if engine is done" << std::endl; log::flush();
+//        MAINLOG("Main checking if engine is done")
 //        if (engine.isDone()) {
-//            log::out << "Main found engine is done" << std::endl; log::flush();
+//            MAINLOG("Main found engine is done")
 //            break;
 //        }
 //        std::this_thread::sleep_for(100ms);
 //    }
 //
-//    log::out << "Engine has ended -- closing." << std::endl; log::flush();
+//    MAINLOG("Engine has ended -- closing.")
 
     engineThread.join();
-    log::out << "Engine thread closed." << std::endl; log::flush();
+    MAINLOG("Engine thread closed.")
 
     exitSignal1.set_value();
     exitSignal2.set_value();
     //outputHandler.end();
     outputThread.join();
-    log::out << "Output thread closed." << std::endl; log::flush();
+    MAINLOG("Output thread closed.")
 
     //inputHandler.end();
     inputThread.join();
-    log::out << "Input thread closed." << std::endl; log::flush();
+    MAINLOG("Input thread closed.")
 
-    log::out << "Goodbye." << std::endl; log::flush();
+    MAINLOG("Goodbye.")
 
     return 0;
 }

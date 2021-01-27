@@ -19,7 +19,6 @@ void Move::_calculateAlgebraicNotation() {
         else if (_promotionResult == PieceType::KNIGHT) {
             _algebraicNotation += 'n';
         }
-        log::out << "ELIELIELI ======= algebraic: " << _algebraicNotation << " sourcecol: " << _source.col << " sourcerow: " << _source.row << " targetcol: " << _target.col << " targetrow: " << _target.row << std::endl; log::flush();
     }
 }
 

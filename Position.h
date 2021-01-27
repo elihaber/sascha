@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include "Enums.h"
-#include "log.h"
+#include "Globals.h"
 
 class Position {
 public:
@@ -67,7 +67,7 @@ public:
     }
 
     static bool areSquaresKnightsMoveFromEachOther(const Position & pos1, const Position & pos2) {
-        log::out << "First: " << abs(pos1.col - pos2.col) << " second: " << abs(pos1.row - pos2.row) << " third: " << abs(pos1.col - pos2.col) << " fourth: " << abs(pos1.row - pos2.row) << std::endl; log::flush();
+        MAINLOG("First: " << abs(pos1.col - pos2.col) << " second: " << abs(pos1.row - pos2.row) << " third: " << abs(pos1.col - pos2.col) << " fourth: " << abs(pos1.row - pos2.row))
         return ((abs(pos1.col - pos2.col) == 2 &&  abs(pos1.row - pos2.row) == 1) ||
                 (abs(pos1.col - pos2.col) == 1 &&  abs(pos1.row - pos2.row) == 2));
     }

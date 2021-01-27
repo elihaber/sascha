@@ -2,7 +2,7 @@
 #include "Board.h"
 #include "Move.h"
 #include "Position.h"
-#include "log.h"
+#include "Globals.h"
 
 std::shared_ptr<Piece> Piece::createPiece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board) {
     if (pieceType == PieceType::PAWN) {
@@ -387,10 +387,10 @@ void Knight::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves
 
     for (const auto & target : potentialTargets) {
         auto move = std::make_shared<Move>(_position, target, _pieceType);
-        log::out << "Potential move: " << move->algebraicNotation() << std::endl;
-        log::out << "isSquareEmpty = " << _board->isSquareEmpty(target) << std::endl;
-        log::out << "isSquarePieceColor = " << _board->isSquarePieceColor(target, _color) << std::endl;
-        log::out << "testMoveForLegality = " << _board->testMoveForLegality(move) << std::endl; log::flush();
+        MAINLOG("Potential move: " << move->algebraicNotation())
+        MAINLOG("isSquareEmpty = " << _board->isSquareEmpty(target))
+        MAINLOG("isSquarePieceColor = " << _board->isSquarePieceColor(target, _color))
+        MAINLOG("testMoveForLegality = " << _board->testMoveForLegality(move))
         if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }

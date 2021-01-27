@@ -1,7 +1,6 @@
 #include <memory>
 #include "MessageQueue.h"
 #include "Message.h"
-#include "log.h"
 
 void MessageQueue::addMessage(std::shared_ptr<Message> message) {
     std::lock_guard<std::mutex> lg(_queProtector);

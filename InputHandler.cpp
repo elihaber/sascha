@@ -9,7 +9,7 @@
 #include "InputHandler.h"
 #include "Message.h"
 #include "MessageQueue.h"
-#include "log.h"
+#include "Globals.h"
 
 using namespace std::chrono_literals;
 
@@ -21,23 +21,23 @@ void InputHandler::start(std::future<void> futureObj) {
     while (futureObj.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout) {
         std::getline(std::cin, line);
         // Forward line to other thread
-        log::out << "in >> ";
+        
+        INPUTLOG(line)
+        MAINLOG_NNL("in >> ")
         if (line.empty()) {
-            log::out << "[empty line] >> ignored" << std::endl;
+            MAINLOG("[empty line] >> ignored")
         }
         else {
-            log::out << line;
-            log::out << " >> ";
+            MAINLOG_NNL(line << " >> ")
 
             auto message = _parseLine(line);
             if (message->messageType() != MessageType::NONE) {
                 _incomingMessages.addMessage(message);
-                log::out << "processed message type " << (int)message->messageType() << std::endl;
+                MAINLOG("processed message type " << (int)message->messageType())
             }
             else {
-                log::out << "ignored" << std::endl;
+                MAINLOG("ignored")
             }
-            log::flush();
         }
         if (line.compare("quit") == 0) {
             std::this_thread::sleep_for(300ms);
@@ -152,7 +152,7 @@ std::shared_ptr<Message> InputHandler::_parseLine(const std::string & line) {
             message->setFenFlag(true);
         }
         else {
-            log::out << "Returning false because no startpos and no fenflag" << std::endl; log::flush();
+            MAINLOG("Returning false because no startpos and no fenflag")
             return nomessage;
         }
 
@@ -168,7 +168,7 @@ std::shared_ptr<Message> InputHandler::_parseLine(const std::string & line) {
 
         if (message->fenFlag()) {
             if (movesPos == 2) {
-                log::out << "Returning false because fenflag and movesPos == 2" << std::endl; log::flush();
+                MAINLOG("Returning false because fenflag and movesPos == 2")
                 return nomessage;
             }
             message->setFen(_concatTokens(tokens, 2, movesPos));
@@ -232,7 +232,7 @@ std::shared_ptr<Message> InputHandler::_parseLine(const std::string & line) {
                     message->setBtime(std::stoi(tokens[keypos + 1]));
                 }
                 catch (std::exception &) {
-                    log::out << "Exception in btime while converting " << tokens[keypos + i] << std::endl; log::flush();
+                    MAINLOG("Exception in btime while converting " << tokens[keypos + i])
                     return nomessage;
                 }
             }
@@ -243,7 +243,7 @@ std::shared_ptr<Message> InputHandler::_parseLine(const std::string & line) {
                     message->setWinc(std::stoi(tokens[keypos + 1]));
                 }
                 catch (std::exception &) {
-                    log::out << "Exception in winc while converting " << tokens[keypos + i] << std::endl; log::flush();
+                    MAINLOG("Exception in winc while converting " << tokens[keypos + i])
                     return nomessage;
                 }
             }
@@ -254,7 +254,7 @@ std::shared_ptr<Message> InputHandler::_parseLine(const std::string & line) {
                     message->setBinc(std::stoi(tokens[keypos + 1]));
                 }
                 catch (std::exception &) {
-                    log::out << "Exception in binc while converting " << tokens[keypos + i] << std::endl; log::flush();
+                    MAINLOG("Exception in binc while converting " << tokens[keypos + i])
                     return nomessage;
                 }
             }
