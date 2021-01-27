@@ -7,9 +7,9 @@
 #include <thread>
 #include <memory>
 #include <future>
-#include "OutputHandler.h"
-#include "Message.h"
-#include "MessageQueue.h"
+#include "IO/OutputHandler.h"
+#include "IO/Messages/Message.h"
+#include "IO/MessageQueue.h"
 #include "Globals.h"
 
 using namespace std::chrono_literals;

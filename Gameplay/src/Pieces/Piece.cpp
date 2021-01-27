@@ -1,7 +1,7 @@
-#include "Piece.h"
-#include "Board.h"
-#include "Move.h"
-#include "Position.h"
+#include "Gameplay/Pieces/Piece.h"
+#include "Gameplay/Board.h"
+#include "Gameplay/Move.h"
+#include "Gameplay/Position.h"
 #include "Globals.h"
 
 namespace Sascha {

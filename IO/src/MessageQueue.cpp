@@ -1,6 +1,6 @@
 #include <memory>
-#include "MessageQueue.h"
-#include "Message.h"
+#include "IO/MessageQueue.h"
+#include "IO/Messages/Message.h"
 
 namespace Sascha {
 namespace IO {

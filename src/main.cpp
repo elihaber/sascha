@@ -1,10 +1,10 @@
 #include <iostream>
 #include <thread>
 #include <future>
-#include "InputHandler.h"
-#include "OutputHandler.h"
-#include "MessageQueue.h"
-#include "Engine.h"
+#include "IO/InputHandler.h"
+#include "IO/OutputHandler.h"
+#include "IO/MessageQueue.h"
+#include "Engine/Engine.h"
 #include "Globals.h"
 
 using namespace std::chrono_literals;

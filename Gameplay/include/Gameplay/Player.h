@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "Enums.h"
-#include "Piece.h"
+#include "Gameplay/Pieces/Piece.h"
 
 namespace Sascha {
 namespace Gameplay {

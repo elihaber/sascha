@@ -1,5 +1,5 @@
 #include <functional>
-#include "Player.h"
+#include "Gameplay/Player.h"
 
 namespace Sascha {
 namespace Gameplay {

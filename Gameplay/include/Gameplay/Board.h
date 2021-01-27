@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 #include "Enums.h"
-#include "Piece.h"
-#include "Player.h"
+#include "Gameplay/Pieces/Piece.h"
+#include "Gameplay/Player.h"
 
 namespace Sascha {
 namespace Gameplay {

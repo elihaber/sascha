@@ -2,7 +2,7 @@
 
 #include <queue>
 #include <mutex>
-#include "Message.h"
+#include "IO/Messages/Message.h"
 
 namespace Sascha {
 namespace IO {

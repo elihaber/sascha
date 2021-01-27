@@ -1,9 +1,9 @@
 #include <sstream>
-#include "Board.h"
-#include "Piece.h"
-#include "Move.h"
+#include "Gameplay/Board.h"
+#include "Gameplay/Pieces/Piece.h"
+#include "Gameplay/Move.h"
 #include "Globals.h"
-#include "Position.h"
+#include "Gameplay/Position.h"
 
 //using namespace Sascha::Gameplay::Pieces;
 

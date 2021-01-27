@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#include "Position.h"
+#include "Gameplay/Position.h"
 #include "Enums.h"
 
 namespace Sascha {

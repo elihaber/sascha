@@ -1,10 +1,10 @@
 #include <thread>
 #include <memory>
-#include "Engine.h"
-#include "Message.h"
-#include "MessageQueue.h"
-#include "Board.h"
-#include "Move.h"
+#include "Engine/Engine.h"
+#include "IO/Messages/Message.h"
+#include "IO/MessageQueue.h"
+#include "Gameplay/Board.h"
+#include "Gameplay/Move.h"
 #include "Globals.h"
 
 using namespace std::chrono_literals;

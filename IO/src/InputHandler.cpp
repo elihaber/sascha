@@ -6,9 +6,9 @@
 #include <vector>
 #include <thread>
 #include <future>
-#include "InputHandler.h"
-#include "Message.h"
-#include "MessageQueue.h"
+#include "IO/InputHandler.h"
+#include "IO/Messages/Message.h"
+#include "IO/MessageQueue.h"
 #include "Globals.h"
 
 using namespace std::chrono_literals;
