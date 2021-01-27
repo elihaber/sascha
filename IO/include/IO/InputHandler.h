@@ -20,7 +20,6 @@ public:
 
 private:
     std::shared_ptr<Messages::Message> _parseLine(const std::string & line);
-    std::string _concatTokens(const std::vector<std::string> tokens, int start, int end);
 
     MessageQueue & _incomingMessages;
     bool _endFlag;

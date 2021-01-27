@@ -19,8 +19,6 @@ public:
     void end();
 
 private:
-    bool _formatMessage(std::shared_ptr<Messages::Message> message, std::stringstream & line);
-
     MessageQueue & _outgoingMessages;
     bool _endFlag;
 };

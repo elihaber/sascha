@@ -1,7 +1,7 @@
 #include <thread>
 #include <memory>
 #include "Engine/Engine.h"
-#include "IO/Messages/Message.h"
+#include "IO/Messages/AllMessages.h"
 #include "IO/MessageQueue.h"
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
@@ -37,19 +37,19 @@ void Engine::_handleInputQueue() {
             break;
         }
         if (message->messageType() == MessageType::UCI) {
-            auto idMessage = std::make_shared<IdMessage>();
+            auto idMessage = std::static_pointer_cast<IdMessage>(Message::createMessage(MessageType::ID));
             idMessage->setNameFlag(true);
             idMessage->setName("Sascha");
             idMessage->setAuthorFlag(true);
             idMessage->setAuthor("Eli Haber");
             _outgoingMessages.addMessage(idMessage);
 
-            auto uciokMessage = std::make_shared<UciOkMessage>();
+            auto uciokMessage = std::static_pointer_cast<UciOkMessage>(Message::createMessage(MessageType::UCIOK));
             _outgoingMessages.addMessage(uciokMessage);
         }
 
         if (message->messageType() == MessageType::ISREADY) {
-            auto readyokMessage = std::make_shared<ReadyOkMessage>();
+            auto readyokMessage = std::static_pointer_cast<ReadyOkMessage>(Message::createMessage(MessageType::READYOK));
             _outgoingMessages.addMessage(readyokMessage);
         }
 

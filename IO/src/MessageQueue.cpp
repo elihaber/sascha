@@ -16,7 +16,7 @@ void MessageQueue::addMessage(std::shared_ptr<Message> message) {
 std::shared_ptr<Message> MessageQueue::readNextMessage() {
     std::lock_guard<std::mutex> lg(_queProtector);
     if (_messageQue.empty()) {
-        return std::make_shared<Message>(MessageType::NONE);
+        return Message::createMessage(MessageType::NONE);
     }
     auto message = _messageQue.front();
     _messageQue.pop();
