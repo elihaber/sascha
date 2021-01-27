@@ -70,7 +70,7 @@ public:
     }
 
     static bool areSquaresKnightsMoveFromEachOther(const Position & pos1, const Position & pos2) {
-        MAINLOG("First: " << abs(pos1.col - pos2.col) << " second: " << abs(pos1.row - pos2.row) << " third: " << abs(pos1.col - pos2.col) << " fourth: " << abs(pos1.row - pos2.row))
+//        MAINLOG("First: " << abs(pos1.col - pos2.col) << " second: " << abs(pos1.row - pos2.row) << " third: " << abs(pos1.col - pos2.col) << " fourth: " << abs(pos1.row - pos2.row))
         return ((abs(pos1.col - pos2.col) == 2 &&  abs(pos1.row - pos2.row) == 1) ||
                 (abs(pos1.col - pos2.col) == 1 &&  abs(pos1.row - pos2.row) == 2));
     }

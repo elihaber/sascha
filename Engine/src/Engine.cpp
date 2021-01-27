@@ -6,6 +6,7 @@
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
 #include "Globals.h"
+#include "Engine/Evaluators/Evaluator.h"
 
 using namespace std::chrono_literals;
 
@@ -15,6 +16,10 @@ namespace Engine {
 using namespace Sascha::IO::Messages;
 using Sascha::Gameplay::Board;
 using Sascha::Gameplay::Move;
+
+Engine::Engine(Sascha::IO::MessageQueue & incomingMessages, Sascha::IO::MessageQueue & outgoingMessages) : _incomingMessages(incomingMessages), _outgoingMessages(outgoingMessages), _isDone(false) {
+    _evaluator = Evaluators::Evaluator::createEvaluator();
+}
 
 void Engine::start() {
     srand (time(NULL));
@@ -87,10 +92,11 @@ void Engine::_handleInputQueue() {
                 MAINLOG_NNL(" " << possibleMoves[i]->algebraicNotation())
             }
             MAINLOG("");
-            int randIndex = rand() % possibleMoves.size();
-            MAINLOG("Selected index " << randIndex << " which is " << possibleMoves[randIndex]->algebraicNotation())
+            _evaluator->setBoard(_board);
+            int moveIndex = _evaluator->getBestMoveIndex(possibleMoves);
+            MAINLOG("Selected index " << moveIndex << " which is " << possibleMoves[moveIndex]->algebraicNotation())
             auto bestMoveMessage = std::make_shared<BestMoveMessage>();
-            bestMoveMessage->setMove1(possibleMoves[randIndex]->algebraicNotation());
+            bestMoveMessage->setMove1(possibleMoves[moveIndex]->algebraicNotation());
             _outgoingMessages.addMessage(bestMoveMessage);
         }
 

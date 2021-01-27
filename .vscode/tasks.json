@@ -11,6 +11,8 @@
 				"-g",
 				"${workspaceFolder}\\Engine\\src\\*.cpp",
 				"-g",
+				"${workspaceFolder}\\Engine\\src\\Evaluators\\*.cpp",
+				"-g",
 				"${workspaceFolder}\\Gameplay\\src\\*.cpp",
 				"-g",
 				"${workspaceFolder}\\Gameplay\\src\\Pieces\\*.cpp",

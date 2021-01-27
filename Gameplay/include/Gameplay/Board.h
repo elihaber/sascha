@@ -37,6 +37,8 @@ public:
     bool enPassantTarget(Position & position) const { position = _enPassantTarget; return _hasEnPassantTarget; }
     Player & whitePlayer() const { return _whitePlayer; }
     Player & blackPlayer() const { return _blackPlayer; }
+    std::vector<std::shared_ptr<Pieces::Piece>> pieces() { return _pieces; }
+    bool isCheckmate();
 
 private:
     void _calculateFen();

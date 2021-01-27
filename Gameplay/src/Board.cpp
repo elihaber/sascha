@@ -327,6 +327,7 @@ void Board::handleMoveAlgebraic(const std::string & moveAlgebraic) {
 }
 
 void Board::undoMove(const std::shared_ptr<Move> & move) {
+    MAINLOG("Undoing move " << move->algebraicNotation())
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -412,9 +413,9 @@ bool Board::scanForCheck(bool otherPlayer) {
     // Find the king whose turn it is
     std::shared_ptr<Pieces::Piece> king;
     if (!otherPlayer) {
-        MAINLOG("Looking for king that is of color " << (int)_whosTurnToGo)
+//        MAINLOG("Looking for king that is of color " << (int)_whosTurnToGo)
     } else {
-        MAINLOG("Looking for king that is NOT of color " << (int)_whosTurnToGo)
+//        MAINLOG("Looking for king that is NOT of color " << (int)_whosTurnToGo)
     }
     for (auto piece : _pieces) {
         if (!otherPlayer) {
@@ -431,7 +432,7 @@ bool Board::scanForCheck(bool otherPlayer) {
         }
     }
 
-    MAINLOG("Checking if king on square " << king->position().col << "," << king->position().row << " is attacked")
+//    MAINLOG("Checking if king on square " << king->position().col << "," << king->position().row << " is attacked")
     return isSquareAttacked(king->position(), oppositeColor(king->color()));
 }
 
@@ -443,17 +444,17 @@ bool Board::isSquareAttacked(const Position & square, Color attackerColor) const
     int squareCol = square.col;
     int squareRow = square.row;
 
-    MAINLOG("Checking if position " << squareCol << "," << squareRow << " is attacked by " << _pieces.size() << " pieces")
+//    MAINLOG("Checking if position " << squareCol << "," << squareRow << " is attacked by " << _pieces.size() << " pieces")
     for (auto piece : _pieces) {
         if (piece->pieceType() == PieceType::BLANK || piece->color() != attackerColor) {
             continue;
         }
         if (piece->isAttackingSquare(square)) {
-            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is attacking")
+//            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is attacking")
             return true;
         }
         else {
-            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is NOT attacking")
+//            MAINLOG("Piece type " << (int)piece->pieceType() << " on " << piece->position().col << "," << piece->position().row << " is NOT attacking")
         }
     }
     return false;
@@ -536,7 +537,7 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
     }
     MAINLOG("Testing move for legality: " << move->algebraicNotation())
     handleMove(move);
-    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
+//    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
     bool result = !scanForCheck(true);
     undoMove(move);
     if (result) {
@@ -652,5 +653,13 @@ void Board::_calculateFen() {
     _fen = sstr.str();
 }
 
+bool Board::isCheckmate() {
+    if (!_isCheck) {
+        return false;
+    }
+    std::vector<std::shared_ptr<Move>> moves;
+    getPossibleMoves(moves);
+    return (moves.size() == 0);
+}
 }
 }
