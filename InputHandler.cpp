@@ -12,6 +12,10 @@
 #include "Globals.h"
 
 using namespace std::chrono_literals;
+namespace Sascha {
+namespace IO {
+
+using namespace Messages;
 
 void InputHandler::start(std::future<void> futureObj) {
     _endFlag = false;
@@ -347,4 +351,5 @@ std::string InputHandler::_concatTokens(const std::vector<std::string> tokens, i
     return sstr.str();        
 }
 
-
+}
+}

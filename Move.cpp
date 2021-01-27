@@ -1,5 +1,8 @@
 #include "Move.h"
 
+namespace Sascha {
+namespace Gameplay {
+
 void Move::_calculateAlgebraicNotation() {
     _algebraicNotation.clear();
     _algebraicNotation += ('a' + _source.col);
@@ -54,4 +57,7 @@ void Move::setHasPromotion(bool val) {
 void Move::setPromotionResult(PieceType val) {
     _promotionResult = val;
     _calculateAlgebraicNotation();
+}
+
+}
 }

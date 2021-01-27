@@ -4,6 +4,11 @@
 #include "Enums.h"
 #include "Piece.h"
 
+namespace Sascha {
+namespace Gameplay {
+
+using Pieces::Piece;
+
 class Player {
 public:
     void addPiece(Piece & piece);
@@ -20,3 +25,6 @@ private:
     bool _isComputer;
     bool _isOponent;
 };
+
+}
+}

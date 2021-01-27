@@ -5,6 +5,9 @@
 #include "Enums.h"
 #include "Globals.h"
 
+namespace Sascha {
+namespace Gameplay {
+
 class Position {
 public:
     int col;
@@ -109,3 +112,6 @@ public:
         return (col == other.col && row == other.row);
     }
 };
+
+}
+}

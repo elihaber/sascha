@@ -4,6 +4,10 @@
 #include <string>
 #include <vector>
 
+namespace Sascha {
+namespace IO {
+namespace Messages {
+
 enum class MessageType {
     NONE,
 
@@ -663,3 +667,7 @@ private:
     bool _varFlag;
     std::vector<std::string> _vars;
 };
+
+}
+}
+}

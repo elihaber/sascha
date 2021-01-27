@@ -2,6 +2,10 @@
 
 #include <string>
 #include "Position.h"
+
+namespace Sascha {
+namespace Gameplay {
+
 class Move {
 public:
     Move(const Position & source, const Position & target, PieceType pieceType) : _source(source), _target(target), _hasPromotion(false), _pieceType(pieceType) {
@@ -33,3 +37,6 @@ private:
     bool _isCastle;
     PieceType _pieceType;
 };
+
+}
+}

@@ -3,6 +3,8 @@
 #include <fstream>
 #include "Logger.h"
 
+namespace Sascha {
+
 const std::string LOG_FOLDER = "C:/Users/eliha/Documents/dev/sascha/logs/";
 const std::string MAIN_LOG_FILE_NAME = "SaschaMainLog.txt";
 const std::string INPUT_LOG_FILE_NAME = "SaschaInputLog.txt";
@@ -19,4 +21,6 @@ Logger::Logger() {
     mainout = std::ofstream(mainlogPath);
     inputout = std::ofstream(inputlogPath);
     outputout = std::ofstream(outputlogPath);
+}
+
 }

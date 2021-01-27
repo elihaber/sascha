@@ -9,6 +9,13 @@
 
 using namespace std::chrono_literals;
 
+namespace Sascha {
+namespace Engine {
+
+using namespace Sascha::IO::Messages;
+using Sascha::Gameplay::Board;
+using Sascha::Gameplay::Move;
+
 void Engine::start() {
     srand (time(NULL));
     while (true) {
@@ -96,4 +103,7 @@ void Engine::_handleInputQueue() {
 
 bool Engine::isDone() {
     return _isDone;
+}
+
+}
 }

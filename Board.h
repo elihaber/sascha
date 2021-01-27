@@ -6,6 +6,9 @@
 #include "Piece.h"
 #include "Player.h"
 
+namespace Sascha {
+namespace Gameplay {
+
 class Move;
 
 class Board : public std::enable_shared_from_this<Board> {
@@ -38,7 +41,7 @@ public:
 private:
     void _calculateFen();
 
-    std::vector<std::shared_ptr<Piece>> _pieces;
+    std::vector<std::shared_ptr<Pieces::Piece>> _pieces;
     Color _whosTurnToGo;
     Player & _whitePlayer;
     Player & _blackPlayer;
@@ -69,3 +72,6 @@ private:
     bool _prevMoveIsCastle;
     std::string _prevFen;
 };
+
+}
+}

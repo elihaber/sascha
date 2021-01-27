@@ -3,6 +3,10 @@
 #include <vector>
 #include "Piece.h"
 
+namespace Sascha {
+namespace Gameplay {
+namespace Pieces {
+
 class BlankPiece : public Piece {
 public:
     BlankPiece(std::shared_ptr<Board> board) : Piece(PieceType::BLANK, board) { }
@@ -10,3 +14,7 @@ public:
     void getPossibleMoves(std::vector<std::string> & possibleMoves) const override;
     virtual bool isBlankPiece() override { return true; }
 };
+
+}
+}
+}

@@ -8,6 +8,10 @@
 #include "Globals.h"
 
 using namespace std::chrono_literals;
+using Sascha::IO::MessageQueue;
+using Sascha::IO::InputHandler;
+using Sascha::IO::OutputHandler;
+using Sascha::Engine::Engine;
 
 int main(int argc, char* argv[]) {
    MAINLOG("Welcome to Sascha!")
@@ -24,8 +28,8 @@ int main(int argc, char* argv[]) {
     MessageQueue outgoingMessages(2);
 
     // Create engine
-    Engine engine(incomingMessages, outgoingMessages);
-    std::thread engineThread(Engine::start, engine);
+    Sascha::Engine::Engine engine(incomingMessages, outgoingMessages);
+    std::thread engineThread(Sascha::Engine::Engine::start, engine);
     
     // Start input handler
     InputHandler inputHandler(incomingMessages);

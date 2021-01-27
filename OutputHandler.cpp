@@ -14,6 +14,11 @@
 
 using namespace std::chrono_literals;
 
+namespace Sascha {
+namespace IO {
+
+using namespace Messages;
+
 void OutputHandler::start(std::future<void> futureObj) {
     std::string line;
 
@@ -38,7 +43,7 @@ void OutputHandler::end() {
     _endFlag = true;
 }
 
-bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::stringstream & line) {
+bool OutputHandler::_formatMessage(std::shared_ptr<Messages::Message> message, std::stringstream & line) {
     if (message->messageType() == MessageType::ID) {
         std::shared_ptr<IdMessage> realMessage = std::static_pointer_cast<IdMessage>(message);
         line << "id ";
@@ -292,4 +297,7 @@ bool OutputHandler::_formatMessage(std::shared_ptr<Message> message, std::string
 
 
     return true;
+}
+
+}
 }

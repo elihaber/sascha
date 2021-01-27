@@ -5,8 +5,13 @@
 #include "Position.h"
 #include "Enums.h"
 
+namespace Sascha {
+namespace Gameplay {
+
 class Board;
 class Move;
+
+namespace Pieces {
 
 class Piece {
 public:
@@ -98,3 +103,6 @@ public:
     bool isAttackingSquare(const Position & square) const override;
 };
 
+}
+}
+}

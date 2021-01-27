@@ -3,14 +3,20 @@
 #include "Piece.h"
 #include "Move.h"
 #include "Globals.h"
+#include "Position.h"
+
+//using namespace Sascha::Gameplay::Pieces;
+
+namespace Sascha {
+namespace Gameplay {
 
 void Board::setUpFromFen(const std::string & fen) {
-    auto blankPiece =std::make_shared<BlankPiece>(shared_from_this());
+    auto blankPiece =std::make_shared<Pieces::BlankPiece>(shared_from_this());
     _pieces.clear();
     for (size_t i = 0; i < 64; ++i) {
         Position pos;
         Position::indexToInternal(i, pos);
-        _pieces.push_back(Piece::createPiece(PieceType::BLANK, Color::WHITE, pos.col, pos.row, shared_from_this()));
+        _pieces.push_back(Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, pos.col, pos.row, shared_from_this()));
     }
     //_pieces.assign(64, blankPiece);
     int pos = 0;
@@ -22,51 +28,51 @@ void Board::setUpFromFen(const std::string & fen) {
     }
     while (currChar != ' ') {
         if (currChar == 'r') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::ROOK, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::ROOK, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'n') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::KNIGHT, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::KNIGHT, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'b') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::BISHOP, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::BISHOP, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'q') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::QUEEN, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::QUEEN, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'k') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::KING, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::KING, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'p') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::PAWN, Color::BLACK, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::PAWN, Color::BLACK, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'R') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::ROOK, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::ROOK, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'N') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::KNIGHT, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::KNIGHT, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'B') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::BISHOP, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::BISHOP, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'Q') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::QUEEN, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::QUEEN, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'K') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::KING, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::KING, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == 'P') {
-            _pieces[Position::internalToIndex(Position(col, row))] = Piece::createPiece(PieceType::PAWN, Color::WHITE, col, row, shared_from_this());
+            _pieces[Position::internalToIndex(Position(col, row))] = Pieces::Piece::createPiece(PieceType::PAWN, Color::WHITE, col, row, shared_from_this());
             ++col;
         }
         else if (currChar == '/') {
@@ -271,11 +277,11 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
         _pieces[endIndex] = movedPiece;
     }
     else {
-        _pieces[endIndex] = Piece::createPiece(move->promotionResult(), movedPiece->color(), endPos.col, endPos.row, shared_from_this());
+        _pieces[endIndex] = Pieces::Piece::createPiece(move->promotionResult(), movedPiece->color(), endPos.col, endPos.row, shared_from_this());
         _pieces[endIndex]->setNumTimesMoved(movedPiece->numTimesMoved());
         _pieces[endIndex]->setHasMoved(true);
     }
-    _pieces[startIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+    _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
 
     if (move->isCastle()) {
         Position rookStartPos(0, 0);
@@ -305,7 +311,7 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
             rookEndPos.row = 7;
         }
         _pieces[Position::internalToIndex(rookEndPos)] = _pieces[Position::internalToIndex(rookStartPos)];
-        _pieces[Position::internalToIndex(rookStartPos)] = Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[Position::internalToIndex(rookStartPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
         _pieces[Position::internalToIndex(rookEndPos)]->incrementNumTimesMoved();
     }
 
@@ -331,7 +337,7 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
     if (!_prevHasPromotion) {
         _pieces[startIndex] = movedPiece;
     } else {
-        _pieces[startIndex] = Piece::createPiece(PieceType::PAWN, movedPiece->color(), startPos.col, startPos.row, shared_from_this());
+        _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::PAWN, movedPiece->color(), startPos.col, startPos.row, shared_from_this());
         _pieces[startIndex]->setNumTimesMoved(movedPiece->numTimesMoved());
         _pieces[startIndex]->setHasMoved(true);
     }
@@ -339,11 +345,11 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
         movedPiece->setHasMoved(false);
     }
     if (_prevHasCapturedPiece) {
-        _pieces[endIndex] = Piece::createPiece(_prevCapturedPieceType, _prevCapturedPieceColor, endPos.col, endPos.row, shared_from_this());
+        _pieces[endIndex] = Pieces::Piece::createPiece(_prevCapturedPieceType, _prevCapturedPieceColor, endPos.col, endPos.row, shared_from_this());
         _pieces[endIndex]->setNumTimesMoved(_prevCapturedPieceNumTimesMoved);
         _pieces[endIndex]->setHasMoved(_prevCapturedPieceNumTimesMoved > 0);
     } else {
-        _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+        _pieces[endIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
     }
 
     if (move->isCastle()) {
@@ -374,7 +380,7 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
             rookEndPos.row = 7;
         }
         _pieces[Position::internalToIndex(rookStartPos)] = _pieces[Position::internalToIndex(rookEndPos)];
-        _pieces[Position::internalToIndex(rookEndPos)] = Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[Position::internalToIndex(rookEndPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
         _pieces[Position::internalToIndex(rookStartPos)]->decrementNumTimesMoved();
     }
 
@@ -403,7 +409,7 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
 
 bool Board::scanForCheck(bool otherPlayer) {
     // Find the king whose turn it is
-    std::shared_ptr<Piece> king;
+    std::shared_ptr<Pieces::Piece> king;
     if (!otherPlayer) {
         MAINLOG("Looking for king that is of color " << (int)_whosTurnToGo)
     } else {
@@ -643,4 +649,7 @@ void Board::_calculateFen() {
     }
     sstr << ' ' << _halfMoveClock << ' ' << _fullMoveNumber;
     _fen = sstr.str();
+}
+
+}
 }

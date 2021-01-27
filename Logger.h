@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+namespace Sascha {
+
 class Logger {
 public:
     static Logger & getInstance() {
@@ -19,3 +21,5 @@ public:
     std::ofstream inputout;
     std::ofstream outputout;
 };
+
+}

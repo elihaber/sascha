@@ -4,8 +4,11 @@
 #include <vector>
 #include <string>
 
+namespace Sascha {
+namespace IO {
+
 class MessageQueue;
-class Message;
+namespace Messages { class Message; }
 
 class OutputHandler {
 
@@ -16,8 +19,11 @@ public:
     void end();
 
 private:
-    bool _formatMessage(std::shared_ptr<Message> message, std::stringstream & line);
+    bool _formatMessage(std::shared_ptr<Messages::Message> message, std::stringstream & line);
 
     MessageQueue & _outgoingMessages;
     bool _endFlag;
 };
+
+}
+}

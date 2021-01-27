@@ -4,6 +4,13 @@
 #include "Position.h"
 #include "Globals.h"
 
+namespace Sascha {
+namespace Gameplay {
+namespace Pieces {
+
+using Sascha::Gameplay::Move;
+using Sascha::Gameplay::Board;
+
 std::shared_ptr<Piece> Piece::createPiece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board) {
     if (pieceType == PieceType::PAWN) {
         return std::make_shared<Pawn>(color, col, row, board);
@@ -696,4 +703,8 @@ bool Pawn::isAttackingSquare(const Position & square) const {
 
 bool BlankPiece::isAttackingSquare(const Position & square) const {
     return false;
+}
+
+}
+}
 }
