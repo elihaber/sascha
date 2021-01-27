@@ -46,63 +46,6 @@ protected:
     std::shared_ptr<Board> _board;
 };
 
-class King : public Piece {
-public:
-    King(std::shared_ptr<Board> board) : Piece(PieceType::KING, board) { }
-    King(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::KING, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class Queen : public Piece {
-public:
-    Queen(std::shared_ptr<Board> board) : Piece(PieceType::QUEEN, board) { }
-    Queen(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::QUEEN, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class Rook : public Piece {
-public:
-    Rook(std::shared_ptr<Board> board) : Piece(PieceType::ROOK, board) { }
-    Rook(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::ROOK, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class Bishop : public Piece {
-public:
-    Bishop(std::shared_ptr<Board> board) : Piece(PieceType::BISHOP, board) { }
-    Bishop(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::BISHOP, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class Knight : public Piece {
-public:
-    Knight(std::shared_ptr<Board> board) : Piece(PieceType::KNIGHT, board) { }
-    Knight(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::KNIGHT, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class Pawn : public Piece {
-public:
-    Pawn(std::shared_ptr<Board> board) : Piece(PieceType::PAWN, board) { }
-    Pawn(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::PAWN, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    bool isAttackingSquare(const Position & square) const override;
-};
-
-class BlankPiece : public Piece {
-public:
-    BlankPiece(std::shared_ptr<Board> board) : Piece(PieceType::BLANK, board) { }
-    BlankPiece(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::BLANK, color, col, row, board) { }
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
-    virtual bool isBlankPiece() override { return true; }
-    bool isAttackingSquare(const Position & square) const override;
-};
-
 }
 }
 }

@@ -1,0 +1,8 @@
+#include "Gameplay/Pieces/Piece.h"
+#include "Gameplay/Pieces/Pawn.h"
+#include "Gameplay/Pieces/Knight.h"
+#include "Gameplay/Pieces/Bishop.h"
+#include "Gameplay/Pieces/Rook.h"
+#include "Gameplay/Pieces/Queen.h"
+#include "Gameplay/Pieces/King.h"
+#include "Gameplay/Pieces/BlankPiece.h"

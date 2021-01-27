@@ -1,11 +1,12 @@
 #include <sstream>
 #include "Gameplay/Board.h"
 #include "Gameplay/Pieces/Piece.h"
+#include "Gameplay/Pieces/BlankPiece.h"
 #include "Gameplay/Move.h"
 #include "Globals.h"
 #include "Gameplay/Position.h"
 
-//using namespace Sascha::Gameplay::Pieces;
+using Sascha::Gameplay::Pieces::BlankPiece;
 
 namespace Sascha {
 namespace Gameplay {
