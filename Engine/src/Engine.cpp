@@ -61,7 +61,7 @@ void Engine::_handleInputQueue() {
                 if (realMessage->movesFlag()) {
                     auto moves = realMessage->moves();
                     for (auto & move : moves) {
-                        _board->handleMoveAlgebraic(move);
+                        _board->handleMoveUciFormat(move);
                     }
                 }
             }
@@ -71,7 +71,7 @@ void Engine::_handleInputQueue() {
                 if (realMessage->movesFlag()) {
                     auto moves = realMessage->moves();
                     for (auto & move : moves) {
-                        _board->handleMoveAlgebraic(move);
+                        _board->handleMoveUciFormat(move);
                     }
                 }
             }
@@ -84,13 +84,13 @@ void Engine::_handleInputQueue() {
             _board->getPossibleMoves(possibleMoves);
             MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
             for (size_t i = 0; i < possibleMoves.size(); ++i) {
-                MAINLOG_NNL(" " << possibleMoves[i]->algebraicNotation())
+                MAINLOG_NNL(" " << possibleMoves[i]->uciFormat())
             }
             MAINLOG("");
             int randIndex = rand() % possibleMoves.size();
-            MAINLOG("Selected index " << randIndex << " which is " << possibleMoves[randIndex]->algebraicNotation())
+            MAINLOG("Selected index " << randIndex << " which is " << possibleMoves[randIndex]->uciFormat())
             auto bestMoveMessage = std::make_shared<BestMoveMessage>();
-            bestMoveMessage->setMove1(possibleMoves[randIndex]->algebraicNotation());
+            bestMoveMessage->setMove1(possibleMoves[randIndex]->uciFormat());
             _outgoingMessages.addMessage(bestMoveMessage);
         }
 

@@ -64,7 +64,7 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
     }
 
     for (const auto & target : potentialTargets) {
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) /* && !_board->isSquareAttacked(target, oppositeColor(_color)) */ && _board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }

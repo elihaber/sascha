@@ -16,7 +16,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -31,7 +31,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -46,7 +46,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -61,7 +61,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -77,7 +77,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -94,7 +94,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -111,7 +111,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
@@ -128,7 +128,7 @@ void Queen::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
         if (_board->isSquarePieceColor(target, _color)) {
             break;
         }
-        auto move = std::make_shared<Move>(_position, target, _pieceType);
+        auto move = std::make_shared<Move>(_position, target, _board);
         if (_board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }
