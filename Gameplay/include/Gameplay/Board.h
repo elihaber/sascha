@@ -5,6 +5,7 @@
 #include "Enums.h"
 #include "Gameplay/Pieces/Piece.h"
 #include "Gameplay/Player.h"
+#include "Gameplay/GameHistory.h"
 
 namespace Sascha {
 namespace Gameplay {
@@ -18,7 +19,7 @@ public:
     void setUpFromFen(const std::string & fen);
     void handleMove(const std::shared_ptr<Move> & move);
     void undoMove(const std::shared_ptr<Move> & move);
-    void handleMoveAlgebraic(const std::string & moveAlgebraic);
+    void handleMoveUciFormat(const std::string & uciFormat);
     int findPiecePosByPosition(const Position & pos);
     void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const;
     bool scanForCheck(bool otherPlayer = false);
@@ -35,6 +36,8 @@ public:
     bool testMoveForLegality(const std::shared_ptr<Move> move);
     bool hasEnPassantTarget() const { return _hasEnPassantTarget; }
     bool enPassantTarget(Position & position) const { position = _enPassantTarget; return _hasEnPassantTarget; }
+    std::shared_ptr<Piece> pieceAt(const Position & position) const;
+    std::vector<std::shared_ptr<Piece>> getAllAttackerOfTypeOnSquare(PieceType pieceType, Color color, Position target);
     Player & whitePlayer() const { return _whitePlayer; }
     Player & blackPlayer() const { return _blackPlayer; }
     std::vector<std::shared_ptr<Pieces::Piece>> pieces() { return _pieces; }
@@ -42,6 +45,8 @@ public:
 
 private:
     void _calculateFen();
+    void _doubleCheckFen();
+    void _undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn);
 
     std::vector<std::shared_ptr<Pieces::Piece>> _pieces;
     Color _whosTurnToGo;
@@ -53,26 +58,12 @@ private:
     int _fullMoveNumber;
     bool _isCheck;
     std::string _fen;
+    GameHistory _gameHistory;
 
     // Previous board state
-    Color _prevWhosTurnToGo;
     bool _prevHasEnPassantTarget;
     Position _prevEnPassantTarget;
     int _prevHalfmoveClock;
-    int _prevFullMoveNumber;
-    bool _prevIsCheck;
-    bool _prevWhiteCastlingKing;
-    bool _prevWhiteCastlingQueen;
-    bool _prevBlackCastlingKing;
-    bool _prevBlackCastlingQueen;
-    bool _prevHasCapturedPiece;
-    Position _prevCapturedPiecePosition;
-    PieceType _prevCapturedPieceType;
-    Color _prevCapturedPieceColor;
-    int _prevCapturedPieceNumTimesMoved;
-    bool _prevHasPromotion;
-    bool _prevMoveIsCastle;
-    std::string _prevFen;
 };
 
 }

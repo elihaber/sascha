@@ -21,16 +21,10 @@ public:
     void setPosition(int col, int row) { _position.col = col; _position.row = row; }
     Position position() const { return _position; }
     virtual bool isBlankPiece() { return false; }
-    void setHasMoved(bool val) { _hasMoved = val; }
-    void incrementNumTimesMoved() { ++_numTimesMoved; _hasMoved = true; }
-    void decrementNumTimesMoved() { --_numTimesMoved; if (_numTimesMoved == 0) { _hasMoved = false; } }
-    bool hasMoved() const { return _hasMoved; }
     PieceType pieceType() const { return _pieceType; }
     Color color() const { return _color; }
     virtual void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const = 0;
     virtual bool isAttackingSquare(const Position & square) const = 0;
-    void setNumTimesMoved(int val) { _numTimesMoved = val; }
-    int numTimesMoved() const { return _numTimesMoved; }
     void setPieceType(PieceType val) { _pieceType = val; }
 
     static std::shared_ptr<Piece> createPiece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board);
@@ -38,8 +32,6 @@ public:
 protected:
     int _maxVal;
     bool _isOnBoard;
-    bool _hasMoved;
-    int _numTimesMoved;
     Color _color;
     Position _position;
     PieceType _pieceType;

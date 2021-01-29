@@ -16,6 +16,8 @@ public:
     void setCastlingRightsQueenSide(bool val) { _castlingRightsQueenSide = val; }
     bool hasCastlingRightsKingSide() const { return _castlingRightsKingSide; }
     bool hasCastlingRightsQueenSide() const { return _castlingRightsQueenSide; }
+    bool hasCastled() const { return _hasCastled; }
+    void setHasCastled(bool val) { _hasCastled = val; }
 private:
     Color _color;
     std::vector<std::reference_wrapper<Piece>> _pieces;

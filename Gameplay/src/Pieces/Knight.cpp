@@ -39,11 +39,19 @@ void Knight::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves
     }
 
     for (const auto & target : potentialTargets) {
+<<<<<<< HEAD
         auto move = std::make_shared<Move>(_position, target, _pieceType);
 //        MAINLOG("Potential move: " << move->algebraicNotation())
 //        MAINLOG("isSquareEmpty = " << _board->isSquareEmpty(target))
 //        MAINLOG("isSquarePieceColor = " << _board->isSquarePieceColor(target, _color))
 //        MAINLOG("testMoveForLegality = " << _board->testMoveForLegality(move))
+=======
+        auto move = std::make_shared<Move>(_position, target, _board);
+        //MAINLOG("Potential move: " << move->uciFormat())
+        //MAINLOG("isSquareEmpty = " << _board->isSquareEmpty(target))
+        //MAINLOG("isSquarePieceColor = " << _board->isSquarePieceColor(target, _color))
+        //MAINLOG("testMoveForLegality = " << _board->testMoveForLegality(move))
+>>>>>>> main
         if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(move)) {
             possibleMoves.push_back(move);
         }

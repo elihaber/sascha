@@ -66,7 +66,7 @@ void Engine::_handleInputQueue() {
                 if (realMessage->movesFlag()) {
                     auto moves = realMessage->moves();
                     for (auto & move : moves) {
-                        _board->handleMoveAlgebraic(move);
+                        _board->handleMoveUciFormat(move);
                     }
                 }
             }
@@ -76,7 +76,7 @@ void Engine::_handleInputQueue() {
                 if (realMessage->movesFlag()) {
                     auto moves = realMessage->moves();
                     for (auto & move : moves) {
-                        _board->handleMoveAlgebraic(move);
+                        _board->handleMoveUciFormat(move);
                     }
                 }
             }
@@ -89,7 +89,7 @@ void Engine::_handleInputQueue() {
             _board->getPossibleMoves(possibleMoves);
             MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
             for (size_t i = 0; i < possibleMoves.size(); ++i) {
-                MAINLOG_NNL(" " << possibleMoves[i]->algebraicNotation())
+                MAINLOG_NNL(" " << possibleMoves[i]->uciFormat())
             }
             MAINLOG("");
             _evaluator->setBoard(_board);

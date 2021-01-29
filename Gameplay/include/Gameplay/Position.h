@@ -48,9 +48,8 @@ public:
     }
 
     static bool areSquaresTouching(const Position & pos1, const Position & pos2) {
-        return (pos1.col >= pos2.col -1 && pos1.col <= pos2.col + 1 &&
-                pos1.row >= pos2.row -1 && pos1.row <= pos2.row + 1 &&
-                !(pos1.col == pos2.col -1 && pos1.row == pos2.row));
+        return (abs(pos1.col - pos2.col) <= 1 &&  abs(pos1.row - pos2.row) <= 1 &&
+                !(pos1.col == pos2.col && pos1.row == pos2.row));
     }
 
     static bool areSquaresOnSameColumn(const Position & pos1, const Position & pos2) {
