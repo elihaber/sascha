@@ -10,4 +10,5 @@ enum class CastleSide { NONE, QUEENSIDE, KINGSIDE, BOTH };
 
 static Color oppositeColor(Color color) { return (color == Color::WHITE) ? Color::BLACK : Color::WHITE; }
 
+static std::string colorToString(Color color) { return (color == Color::WHITE) ? "WHITE" : "BLACK"; }
 }

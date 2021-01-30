@@ -5,21 +5,23 @@ namespace Sascha {
 namespace Gameplay {
 
 Move::Move(const Position & source, const Position & target, const std::shared_ptr<Board> & board) : 
-        _board(board), _source(source), _target(target), _promotionResult(PieceType::BLANK), _ruinedCastling(CastleSide::NONE)  {
+        _board(board), _source(source), _target(target), _promotionResult(PieceType::BLANK), _ruinedCastling(CastleSide::NONE), _ruinedEnPassant(false), _enabledEnPassant(false)  {
     _calculateUciFormat();
     _findColor();
     _findPieceType();
     _calculateIsCapture();
     _calculateIsPromotion();
     _calculateIsCastle();
+    _calculateIsEnPassant();
     _calculateAlgebraicFormat();
 }
-Move::Move(const std::string & uciFormat, const std::shared_ptr<Board> & board) : _board(board), _uciFormat(uciFormat), _ruinedCastling(CastleSide::NONE) {
+Move::Move(const std::string & uciFormat, const std::shared_ptr<Board> & board) : _board(board), _uciFormat(uciFormat), _ruinedCastling(CastleSide::NONE), _ruinedEnPassant(false), _enabledEnPassant(false) {
     _calculateInternalValues();
     _findColor();
     _findPieceType();
     _calculateIsCapture();
     _calculateIsCastle();
+    _calculateIsEnPassant();
     _calculateAlgebraicFormat();
 }
 
@@ -39,14 +41,20 @@ void Move::_calculateIsCapture() {
 }
 
 void Move::_calculateIsPromotion() {
-    _isPromotion = (_pieceType == PieceType::PAWN && (_target.row == 0 || _target.row == 8));
+    _isPromotion = (_pieceType == PieceType::PAWN && (_target.row == 0 || _target.row == 7));
 }
 
 void Move::_calculateIsCastle() {
     _isCastle = (_pieceType == PieceType::KING && _source.row == _target.row && abs(_source.col - _target.col) > 1);
     if (_isCastle) {
-        _castleSide = (abs(_source.col - _target.col) == 2 ? CastleSide::KINGSIDE : CastleSide::QUEENSIDE);
+        _castleSide = (_target.col == 6 ? CastleSide::KINGSIDE : CastleSide::QUEENSIDE);
     }
+}
+
+void Move::_calculateIsEnPassant() {
+    Position enPassantTarget;
+    _board->enPassantTarget(enPassantTarget);
+    _isEnPassant = (_pieceType == PieceType::PAWN && _board->hasEnPassantTarget() && enPassantTarget == _target);
 }
 
 void Move::_calculateUciFormat() {
@@ -166,7 +174,7 @@ void Move::_calculateInternalValues() {
 
 void Move::setPromotionResult(PieceType val) {
     if (!_isPromotion) {
-        MAINLOG("ERROR: Setting promotion result for move that is not promotion")
+        MAINLOG("ERROR: Setting promotion result for move that is not promotion: " << _algebraicFormat)
         throw std::runtime_error("ERROR: Setting promotion result for move that is not promotion");
     }
 

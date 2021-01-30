@@ -169,7 +169,7 @@ void Board::setUpStartingPosition() {
 }
 
 void Board::handleMove(const std::shared_ptr<Move> & move) {
-    MAINLOG("Handling move " << move->uciFormat())
+    MAINLOG("Handling move " << move->algebraicFormat())
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -219,7 +219,7 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
                 _whitePlayer.setCastlingRightsKingSide(false);
                 move->setRuinedCastling(CastleSide::KINGSIDE);
             }
-            else if (move->source() == Position(0, 7) && move->color() == Color::BLACK && _blackPlayer.hasCastlingRightsKingSide() && !_blackPlayer.hasCastled()) {
+            else if (move->source() == Position(0, 7) && move->color() == Color::BLACK && _blackPlayer.hasCastlingRightsQueenSide() && !_blackPlayer.hasCastled()) {
                 _blackPlayer.setCastlingRightsQueenSide(false);
                 move->setRuinedCastling(CastleSide::QUEENSIDE);
             }
@@ -229,9 +229,43 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
             }
         }
     }
+    else {
+        if (move->color() == Color::WHITE) {
+            if (_whitePlayer.hasCastlingRightsQueenSide() && _whitePlayer.hasCastlingRightsKingSide()) {
+                _whitePlayer.setCastlingRightsQueenSide(false);
+                _whitePlayer.setCastlingRightsKingSide(false);
+                move->setRuinedCastling(CastleSide::BOTH);
+            }
+            else if (_whitePlayer.hasCastlingRightsQueenSide()) {
+                _whitePlayer.setCastlingRightsQueenSide(false);
+                move->setRuinedCastling(CastleSide::QUEENSIDE);
+            }
+            else if (_whitePlayer.hasCastlingRightsKingSide()) {
+                _whitePlayer.setCastlingRightsKingSide(false);
+                move->setRuinedCastling(CastleSide::KINGSIDE);
+            }
+        }
+        else {
+            if (_blackPlayer.hasCastlingRightsQueenSide() && _blackPlayer.hasCastlingRightsKingSide()) {
+                _blackPlayer.setCastlingRightsQueenSide(false);
+                _blackPlayer.setCastlingRightsKingSide(false);
+                move->setRuinedCastling(CastleSide::BOTH);
+            }
+            else if (_blackPlayer.hasCastlingRightsQueenSide()) {
+                _blackPlayer.setCastlingRightsQueenSide(false);
+                move->setRuinedCastling(CastleSide::QUEENSIDE);
+            }
+            else if (_blackPlayer.hasCastlingRightsKingSide()) {
+                _blackPlayer.setCastlingRightsKingSide(false);
+                move->setRuinedCastling(CastleSide::KINGSIDE);
+            }
+        }
+    }
 
-    _prevHasEnPassantTarget = _hasEnPassantTarget;
-    _prevEnPassantTarget = _enPassantTarget;
+    if (_hasEnPassantTarget) {
+        move->setRuinedEnPassant(true);
+        move->setRuinedEnPassantTarget(_enPassantTarget);
+    }
 
     _hasEnPassantTarget = false;
     bool pawnMove = false;
@@ -241,10 +275,14 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
         if (endPos.row - startPos.row == 2) {
             _hasEnPassantTarget = true;
             _enPassantTarget = Position(endPos.col, endPos.row - 1);
+            move->setEnabledEnPassant(true);
+            move->setEnabledEnPassantTarget(_enPassantTarget);
         }
         else if (startPos.row - endPos.row == 2) {
             _hasEnPassantTarget = true;
             _enPassantTarget = Position(endPos.col, endPos.row + 1);
+            move->setEnabledEnPassant(true);
+            move->setEnabledEnPassantTarget(_enPassantTarget);
         }
     }
 
@@ -312,6 +350,20 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
         if (move->isCapture()) {
             _gameHistory.addCapturedPiece(_pieces[endIndex]);
         }
+        else if (move->isEnPassant()) {
+            if (move->color() == Color::WHITE) {
+                Position enPassantPawnActualPos(_enPassantTarget.col, _enPassantTarget.row - 1);
+                _gameHistory.addCapturedPiece(_pieces[Position::internalToIndex(enPassantPawnActualPos)]);
+                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+            }
+            else {
+                Position enPassantPawnActualPos(_enPassantTarget.col, _enPassantTarget.row + 1);
+                _gameHistory.addCapturedPiece(_pieces[Position::internalToIndex(enPassantPawnActualPos)]);
+                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+            }
+        }
+        else {
+        }
         _pieces[endIndex] = _pieces[startIndex];
         _pieces[endIndex]->setPosition(endPos.col, endPos.row);
         _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
@@ -333,9 +385,6 @@ void Board::handleMoveUciFormat(const std::string & uciFormat) {
 }
 
 void Board::undoMove(const std::shared_ptr<Move> & move) {
-<<<<<<< HEAD
-    MAINLOG("Undoing move " << move->algebraicNotation())
-=======
     if (_gameHistory.isEmpty()) {
         MAINLOG("ERROR: Attempt to undo move when hisory is empty");
         throw std::runtime_error("ERROR: Attempt to undo move when hisory is empty");
@@ -348,7 +397,7 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
     }
 
     if (!(*lastMove == *move)) {
-        MAINLOG("ERROR: Last move " << lastMove->uciFormat() << " does not match undo move " << move->uciFormat());
+        MAINLOG("ERROR: Last move " << lastMove->algebraicFormat() << " does not match undo move " << move->algebraicFormat());
         throw std::runtime_error("ERROR: Last move does not match undo move");
     }
 
@@ -359,7 +408,7 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
     }
 
     std::shared_ptr<Piece> lastCapturedPiece;
-    if (lastMove->isCapture()) {
+    if (lastMove->isCapture() || lastMove->isEnPassant()) {
         if (!_gameHistory.lastCapturedPiece(lastCapturedPiece)) {
             MAINLOG("ERROR: No last captured piece but last move was a capture");
             throw std::runtime_error("ERROR: No last captured piece but last move was a capture");
@@ -399,14 +448,13 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
 }
 
 void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn) {
-    MAINLOG("Undoing move " << move->uciFormat())
+    MAINLOG("Undoing move " << move->algebraicFormat())
     if (move->pieceType() == PieceType::KING) {
         MAINLOG("HERE")
     }
     _calculateFen();
     std::string fenBeforeUndo = _fen;
 
->>>>>>> main
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -428,20 +476,38 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
             if (move->castleSide() == CastleSide::KINGSIDE) {
                 _pieces[Position::internalToIndex(Position(7, 0))] = _pieces[Position::internalToIndex(Position(5, 0))];
                 _pieces[Position::internalToIndex(Position(7, 0))]->setPosition(7, 0);
+                _pieces[Position::internalToIndex(Position(4, 0))] = _pieces[Position::internalToIndex(Position(6, 0))];
+                _pieces[Position::internalToIndex(Position(4, 0))]->setPosition(4, 0);
+                _pieces[Position::internalToIndex(Position(5, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 5, 0, shared_from_this());
+                _pieces[Position::internalToIndex(Position(6, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 6, 0, shared_from_this());
             }
             else {
                 _pieces[Position::internalToIndex(Position(0, 0))] = _pieces[Position::internalToIndex(Position(3, 0))];
                 _pieces[Position::internalToIndex(Position(0, 0))]->setPosition(0, 0);
+                _pieces[Position::internalToIndex(Position(4, 0))] = _pieces[Position::internalToIndex(Position(2, 0))];
+                _pieces[Position::internalToIndex(Position(4, 0))]->setPosition(4, 0);
+                _pieces[Position::internalToIndex(Position(1, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 1, 0, shared_from_this());
+                _pieces[Position::internalToIndex(Position(2, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 2, 0, shared_from_this());
+                _pieces[Position::internalToIndex(Position(3, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 3, 0, shared_from_this());
             }
         }
         else {
             if (move->castleSide() == CastleSide::KINGSIDE) {
                 _pieces[Position::internalToIndex(Position(7, 7))] = _pieces[Position::internalToIndex(Position(5, 7))];
                 _pieces[Position::internalToIndex(Position(7, 7))]->setPosition(7, 7);
+                _pieces[Position::internalToIndex(Position(4, 7))] = _pieces[Position::internalToIndex(Position(6, 7))];
+                _pieces[Position::internalToIndex(Position(4, 7))]->setPosition(4, 7);
+                _pieces[Position::internalToIndex(Position(5, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 5, 7, shared_from_this());
+                _pieces[Position::internalToIndex(Position(6, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 6, 7, shared_from_this());
             }
             else {
                 _pieces[Position::internalToIndex(Position(0, 7))] = _pieces[Position::internalToIndex(Position(3, 7))];
                 _pieces[Position::internalToIndex(Position(0, 7))]->setPosition(0, 7);
+                _pieces[Position::internalToIndex(Position(4, 7))] = _pieces[Position::internalToIndex(Position(2, 7))];
+                _pieces[Position::internalToIndex(Position(4, 7))]->setPosition(4, 7);
+                _pieces[Position::internalToIndex(Position(1, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 1, 7, shared_from_this());
+                _pieces[Position::internalToIndex(Position(2, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 2, 7, shared_from_this());
+                _pieces[Position::internalToIndex(Position(3, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 3, 7, shared_from_this());
             }
         }
         if (move->color() == Color::WHITE) {
@@ -456,10 +522,34 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
         _pieces[endIndex] = capturedPiece;
     }
+    else if (move->isEnPassant()) {
+        _pieces[startIndex] = _pieces[endIndex];
+        _pieces[startIndex]->setPosition(startPos.col, startPos.row);
+        if (move->color() == Color::WHITE) {
+            Position locationOfCapturedPawn(endPos.col, endPos.row - 1);
+            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = capturedPiece;
+        }
+        else {
+            Position locationOfCapturedPawn(endPos.col, endPos.row + 1);
+            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = capturedPiece;
+        }
+        _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+    }
     else {
         _pieces[startIndex] = _pieces[endIndex];
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
         _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+    }
+
+    if (move->enabledEnPassant()) {
+        _hasEnPassantTarget = false;
+        _enPassantTarget = Position(0, 0);
+    }
+    if (move->ruinedEnPassant()) {
+        MAINLOG("Undoing move that ruined en passant")
+        _hasEnPassantTarget = true;
+        _enPassantTarget = move->ruinedEnPassantTarget();
+        MAINLOG("Setting board en passant target to " << _enPassantTarget.col << "," << _enPassantTarget.row)
     }
 
     if (move->color() == Color::BLACK) {
@@ -468,8 +558,6 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
 
     _whosTurnToGo = move->color();
     _halfMoveClock = _prevHalfmoveClock;
-    _hasEnPassantTarget = _prevHasEnPassantTarget;
-    _enPassantTarget = _prevEnPassantTarget;
 
     if (move->ruinedCastling() == CastleSide::BOTH) {
         if (move->color() == Color::WHITE) {
@@ -641,7 +729,7 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
         // Cannot capture a king!
         return false;
     }
-    MAINLOG("Testing move for legality: " << move->uciFormat())
+    MAINLOG("Testing move for legality: " << move->algebraicFormat())
     handleMove(move);
 //    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
     bool result = !scanForCheck(true);
@@ -759,7 +847,6 @@ void Board::_calculateFen() {
     _fen = sstr.str();
 }
 
-<<<<<<< HEAD
 bool Board::isCheckmate() {
     if (!_isCheck) {
         return false;
@@ -768,7 +855,16 @@ bool Board::isCheckmate() {
     getPossibleMoves(moves);
     return (moves.size() == 0);
 }
-=======
+
+bool Board::isStalemate() {
+    if (_isCheck) {
+        return false;
+    }
+    std::vector<std::shared_ptr<Move>> moves;
+    getPossibleMoves(moves);
+    return (moves.size() == 0);
+}
+
 void Board::_doubleCheckFen() {
 }
 
@@ -790,6 +886,5 @@ std::vector<std::shared_ptr<Piece>> Board::getAllAttackerOfTypeOnSquare(PieceTyp
     return attackers;
 }
 
->>>>>>> main
 }
 }

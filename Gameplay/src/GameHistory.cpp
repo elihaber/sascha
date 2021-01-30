@@ -22,7 +22,7 @@ void GameHistory::undoLastMove() {
     _fens.pop();
 
      auto move = _moves.top();
-     if (move->isCapture()) {
+     if (move->isCapture() || move->isEnPassant()) {
          _capturedPieces.pop();
      }
      if (move->isPromotion()) {

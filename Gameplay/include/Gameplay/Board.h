@@ -42,6 +42,7 @@ public:
     Player & blackPlayer() const { return _blackPlayer; }
     std::vector<std::shared_ptr<Pieces::Piece>> pieces() { return _pieces; }
     bool isCheckmate();
+    bool isStalemate();
 
 private:
     void _calculateFen();
@@ -61,8 +62,6 @@ private:
     GameHistory _gameHistory;
 
     // Previous board state
-    bool _prevHasEnPassantTarget;
-    Position _prevEnPassantTarget;
     int _prevHalfmoveClock;
 };
 

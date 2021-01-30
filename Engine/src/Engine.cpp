@@ -89,14 +89,14 @@ void Engine::_handleInputQueue() {
             _board->getPossibleMoves(possibleMoves);
             MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
             for (size_t i = 0; i < possibleMoves.size(); ++i) {
-                MAINLOG_NNL(" " << possibleMoves[i]->uciFormat())
+                MAINLOG_NNL(" " << possibleMoves[i]->algebraicFormat())
             }
             MAINLOG("");
             _evaluator->setBoard(_board);
             int moveIndex = _evaluator->getBestMoveIndex(possibleMoves);
-            MAINLOG("Selected index " << moveIndex << " which is " << possibleMoves[moveIndex]->algebraicNotation())
+            MAINLOG("Selected index " << moveIndex << " which is " << possibleMoves[moveIndex]->algebraicFormat())
             auto bestMoveMessage = std::make_shared<BestMoveMessage>();
-            bestMoveMessage->setMove1(possibleMoves[moveIndex]->algebraicNotation());
+            bestMoveMessage->setMove1(possibleMoves[moveIndex]->uciFormat());
             _outgoingMessages.addMessage(bestMoveMessage);
         }
 

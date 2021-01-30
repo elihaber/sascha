@@ -20,6 +20,7 @@ public:
     std::ofstream mainout;
     std::ofstream inputout;
     std::ofstream outputout;
+    std::ofstream recursionout;
 };
 
 }

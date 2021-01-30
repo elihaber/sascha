@@ -23,10 +23,19 @@ public:
     bool isPromotion() const { return _isPromotion; }
     PieceType promotionResult() const { return _promotionResult; }
     bool isCastle() const { return _isCastle; }
+    bool isEnPassant() const { return _isEnPassant; }
+    void setRuinedEnPassant(bool val) { _ruinedEnPassant = val; }
+    void setRuinedEnPassantTarget(const Position & pos) { _ruinedEnPassantTarget = pos; }
+    void setEnabledEnPassant(bool val) { _enabledEnPassant = val; }
+    void setEnabledEnPassantTarget(const Position & pos) { _enabledEnPassantTarget = pos; }
     CastleSide castleSide() const { return _castleSide; }
     std::string uciFormat() const { return _uciFormat; }
     std::string algebraicFormat() const { return _algebraicFormat; }
     CastleSide ruinedCastling() const { return _ruinedCastling; }
+    bool ruinedEnPassant() const { return _ruinedEnPassant; }
+    Position ruinedEnPassantTarget() const { return _ruinedEnPassantTarget; }
+    bool enabledEnPassant() const { return _enabledEnPassant; }
+    Position enabledEnPassantTarget() const { return _enabledEnPassantTarget; }
 
     void setPromotionResult(PieceType val);
     void setRuinedCastling(CastleSide val) { _ruinedCastling = val; }
@@ -41,6 +50,7 @@ private:
     void _calculateIsCapture();
     void _calculateIsPromotion();
     void _calculateIsCastle();
+    void _calculateIsEnPassant();
     void _calculateUciFormat();
     void _calculateInternalValues();
     void _calculateAlgebraicFormat();
@@ -59,6 +69,11 @@ private:
     std::string _uciFormat;
     std::string _algebraicFormat;
     CastleSide _ruinedCastling;
+    bool _isEnPassant;
+    bool _ruinedEnPassant;
+    Position _ruinedEnPassantTarget;
+    bool _enabledEnPassant;
+    Position _enabledEnPassantTarget;
 };
 
 }
