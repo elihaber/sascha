@@ -80,6 +80,79 @@ void Bishop::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves
     }
 }
 
+bool Bishop::calculateHasLegalMove() const {
+    int targetCol = _position.col + 1;
+    int targetRow = _position.row + 1;
+    while (targetCol < 8 && targetRow < 8) {
+        Position target(targetCol, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        ++targetCol;
+        ++targetRow;
+    }
+    targetCol = _position.col - 1;
+    targetRow = _position.row - 1;
+    while (targetCol > -1 && targetRow > -1) {
+        Position target(targetCol, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        --targetCol;
+        --targetRow;
+    }
+    targetCol = _position.col + 1;
+    targetRow = _position.row - 1;
+    while (targetCol < 8 && targetRow > -1) {
+        Position target(targetCol, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        ++targetCol;
+        --targetRow;
+    }
+    targetCol = _position.col - 1;
+    targetRow = _position.row + 1;
+    while (targetCol > -1 && targetRow < 8) {
+        Position target(targetCol, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        --targetCol;
+        ++targetRow;
+    }
+
+    return false;
+}
+
 bool Bishop::isAttackingSquare(const Position & square) const {
     if (square == _position) {
         return false;

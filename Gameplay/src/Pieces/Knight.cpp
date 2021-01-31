@@ -50,6 +50,62 @@ void Knight::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves
     }
 }
 
+bool Knight::calculateHasLegalMove() const {
+    std::vector<std::shared_ptr<Move>> potentialMoves;
+    std::vector<Position> potentialTargets;
+
+    if (_position.col + 1 < 8 && _position.row + 2 < 8) {
+        Position target(_position.col + 1, _position.row + 2);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col + 1 < 8 && _position.row - 2 > -1) {
+        Position target(_position.col + 1, _position.row - 2);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col + 2 < 8 && _position.row + 1 < 8) {
+        Position target(_position.col + 2, _position.row + 1);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col + 2 < 8 && _position.row - 1 > -1) {
+        Position target(_position.col + 2, _position.row - 1);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col - 1 > -1 && _position.row + 2 < 8) {
+        Position target(_position.col - 1, _position.row + 2);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col - 1 > -1 && _position.row - 2 > -1) {
+        Position target(_position.col - 1, _position.row - 2);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col - 2 > -1 && _position.row + 1 < 8) {
+        Position target(_position.col - 2, _position.row + 1);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+    if (_position.col - 2 > -1 && _position.row - 1 > -1) {
+        Position target(_position.col - 2, _position.row - 1);
+        if ((_board->isSquareEmpty(target) || !_board->isSquarePieceColor(target, _color)) && _board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool Knight::isAttackingSquare(const Position & square) const {
     if (square == _position) {
         return false;

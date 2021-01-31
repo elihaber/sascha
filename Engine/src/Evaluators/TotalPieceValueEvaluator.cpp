@@ -69,7 +69,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
         for (auto move : possibleMoves) {
 
             auto t1 = std::chrono::high_resolution_clock::now();
-            _board->handleMove(move, true);
+            _board->handleMoveForSingleAnalysis(move);
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalHandle1Time += duration;
@@ -78,7 +78,12 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             float eval = _evaluateMoveSingle(move, evaluationCalculatedPossibleMoves);
 
             t1 = std::chrono::high_resolution_clock::now();
-            _board->undoMove(move, !evaluationCalculatedPossibleMoves);
+            if (evaluationCalculatedPossibleMoves) {
+                _board->undoFullAnalysisMove(move);
+            }
+            else {
+                _board->undoSingleAnalysisMove(move);
+            }
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalUndo1Time += duration;
@@ -109,7 +114,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
         for (auto move : possibleMoves) {
 
             auto t1 = std::chrono::high_resolution_clock::now();
-            _board->handleMove(move, true);
+            _board->handleMoveForSingleAnalysis(move);
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalHandle2Time += duration;
@@ -120,7 +125,12 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             moveAPrioriEvals.insert(std::make_pair(move->algebraicFormat(), eval));
 
             t1 = std::chrono::high_resolution_clock::now();
-            _board->undoMove(move, !evaluationCalculatedPossibleMoves);
+            if (evaluationCalculatedPossibleMoves) {
+                _board->undoFullAnalysisMove(move);
+            }
+            else {
+                _board->undoSingleAnalysisMove(move);
+            }
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalUndo2Time += duration;
@@ -176,7 +186,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
 
             auto t1 = std::chrono::high_resolution_clock::now();
-            _board->handleMove(bestMoves[i]);
+            _board->handleMoveForFullAnalysis(bestMoves[i]);
             auto t2 = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalHandle3Time += duration;
@@ -185,7 +195,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             float moveEval = _calcBestEval(numPliesLeft - 1).first;
 
             t1 = std::chrono::high_resolution_clock::now();
-            _board->undoMove(bestMoves[i]);
+            _board->undoFullAnalysisMove(bestMoves[i]);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalUndo3Time += duration;
@@ -378,10 +388,9 @@ float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move, 
             }
         }
     }
-    // TODO: DOESN"T CHECK FOR STALEMATE BECAUSE I DON"T WANT TO CALCULATE ALL POSSIBLE MOVES EVERY TIME!
-//    else if (_board->isStalemate()) {
-//        eval = 0.0;
-//    }
+    else if (_board->isStalemate()) {
+        eval = 0.0;
+    }
     return eval;
 }
 

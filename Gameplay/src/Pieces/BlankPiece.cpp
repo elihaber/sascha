@@ -9,6 +9,8 @@ namespace Pieces {
 
 void BlankPiece::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const { }
 
+bool BlankPiece::calculateHasLegalMove() const { return false; }
+
 bool BlankPiece::isAttackingSquare(const Position & square) const {
     return false;
 }

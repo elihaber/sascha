@@ -72,6 +72,71 @@ void Rook::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
     }
 }
 
+bool Rook::calculateHasLegalMove() const {
+    int targetRow = _position.row + 1;
+    while (targetRow < 8) {
+        Position target(_position.col, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        ++targetRow;
+    }
+    targetRow = _position.row - 1;
+    while (targetRow > -1) {
+        Position target(_position.col, targetRow);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        --targetRow;
+    }
+    int targetCol = _position.col + 1;
+    while (targetCol < 8) {
+        Position target(targetCol, _position.row);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        ++targetCol;
+    }
+    targetCol = _position.col - 1;
+    while (targetCol > -1) {
+        Position target(targetCol, _position.row);
+        if (_board->isSquarePieceColor(target, _color)) {
+            break;
+        }
+        auto move = std::make_shared<Move>(_position, target, _board);
+        if (_board->testMoveForLegality(move)) {
+            return true;
+        }
+        if (!_board->isSquareEmpty(target)) {
+            break;
+        }
+        --targetCol;
+    }
+
+    return false;
+}
+
 bool Rook::isAttackingSquare(const Position & square) const {
     if (square == _position) {
         return false;

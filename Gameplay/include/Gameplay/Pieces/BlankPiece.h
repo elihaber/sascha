@@ -12,6 +12,7 @@ public:
     BlankPiece(std::shared_ptr<Board> board) : Piece(PieceType::BLANK, board) { }
     BlankPiece(Color color, int col, int row, std::shared_ptr<Board> board) : Piece(PieceType::BLANK, color, col, row, board) { }
     void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const override;
+    bool calculateHasLegalMove() const override ;
     virtual bool isBlankPiece() override { return true; }
     bool isAttackingSquare(const Position & square) const override;
 };

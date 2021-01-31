@@ -192,6 +192,167 @@ void Pawn::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
     }
 }
 
+bool Pawn::calculateHasLegalMove() const {
+    std::vector<std::shared_ptr<Move>> potentialMoves;
+
+    if (_color == Color::WHITE) {
+        auto target = Position(_position.col, _position.row + 1);
+        if (_board->isSquareEmpty(target)) {
+            if (target.row != 7) {
+                if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                    return true;
+                }
+            }
+            else {
+                auto move = std::make_shared<Move>(_position, target, _board);
+                move->setPromotionResult(PieceType::KNIGHT);
+                if (_board->testMoveForLegality(move)) {
+                    return true;
+                }
+            }
+            target = Position(_position.col, _position.row + 2);
+            if (_position.row == 1 && _board->isSquareEmpty(target)) {
+                if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                    return true;
+                }
+            }
+        }
+        if (_position.col > 0) {
+            target = Position(_position.col - 1, _position.row + 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                if (target.row != 7) {
+                    if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                        return true;
+                    }
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _board);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    if (_board->testMoveForLegality(move)) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        if (_position.col < 7) {
+            target = Position(_position.col + 1, _position.row + 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                if (target.row != 7) {
+                    if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                        return true;
+                    }
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _board);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    if (_board->testMoveForLegality(move)) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else {
+        auto target = Position(_position.col, _position.row - 1);
+        if (_board->isSquareEmpty(target)) {
+            if (target.row != 0) {
+                if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                    return true;
+                }
+            }
+            else {
+                auto move = std::make_shared<Move>(_position, target, _board);
+                move->setPromotionResult(PieceType::KNIGHT);
+                if (_board->testMoveForLegality(move)) {
+                    return true;
+                }
+            }
+            target = Position(_position.col, _position.row - 2);
+            if (_position.row == 6 && _board->isSquareEmpty(target)) {
+                if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                    return true;
+                }
+            }
+        }
+        if (_position.col > 0) {
+            target = Position(_position.col - 1, _position.row - 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                if (target.row != 0) {
+                    if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                        return true;
+                    }
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _board);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    if (_board->testMoveForLegality(move)) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        if (_position.col < 7) {
+            target = Position(_position.col + 1, _position.row - 1);
+            if (!_board->isSquareEmpty(target) && !_board->isSquarePieceColor(target, _color)) {
+                if (target.row != 0) {
+                    if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                        return true;
+                    }
+                }
+                else {
+                    auto move = std::make_shared<Move>(_position, target, _board);
+                    move->setPromotionResult(PieceType::KNIGHT);
+                    if (_board->testMoveForLegality(move)) {
+                        return true;
+                    }
+                }
+            }
+            else {
+                Position enPassantTarget;
+                if (_board->enPassantTarget(enPassantTarget)) {
+                    if (enPassantTarget == target) {
+                        if (_board->testMoveForLegality(std::make_shared<Move>(_position, target, _board))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 bool Pawn::isAttackingSquare(const Position & square) const {
     if (square == _position) {
         return false;

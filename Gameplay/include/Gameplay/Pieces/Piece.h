@@ -24,6 +24,7 @@ public:
     PieceType pieceType() const { return _pieceType; }
     Color color() const { return _color; }
     virtual void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const = 0;
+    virtual bool calculateHasLegalMove() const = 0;
     virtual bool isAttackingSquare(const Position & square) const = 0;
     void setPieceType(PieceType val) { _pieceType = val; }
 

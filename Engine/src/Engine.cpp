@@ -60,27 +60,25 @@ void Engine::_handleInputQueue() {
 
         if (message->messageType() == MessageType::POSITION) {
             std::shared_ptr<PositionMessage> realMessage = std::static_pointer_cast<PositionMessage>(message);
+            _board = std::make_shared<Board>(_whitePlayer, _blackPlayer);
             if (realMessage->startposFlag()) {
-                _board = std::make_shared<Board>(_whitePlayer, _blackPlayer);
                 _board->setUpStartingPosition();
-                if (realMessage->movesFlag()) {
-                    auto moves = realMessage->moves();
-                    for (auto & move : moves) {
-                        _board->handleMoveUciFormat(move);
-                    }
-                }
             }
             else if (realMessage->fenFlag()) {
-                _board = std::make_shared<Board>(_whitePlayer, _blackPlayer);
                 _board->setUpFromFen(realMessage->fen());
-                if (realMessage->movesFlag()) {
-                    auto moves = realMessage->moves();
-                    for (auto & move : moves) {
-                        _board->handleMoveUciFormat(move);
+            }
+            if (realMessage->movesFlag()) {
+                auto uciMoves = realMessage->moves();
+                for (size_t i = 0; i < uciMoves.size(); ++i) {
+                    auto move = std::make_shared<Move>(uciMoves[i], _board);
+                    if (i == uciMoves.size() - 1) {
+                        _board->handleMoveForFullAnalysis(move);
+                    }
+                    else {
+                        _board->handleMoveForSingleAnalysis(move);
                     }
                 }
             }
-
         }
 
         if (message->messageType() == MessageType::GO) {

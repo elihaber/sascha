@@ -170,7 +170,18 @@ void Board::setUpStartingPosition() {
     setUpFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
-void Board::handleMove(const std::shared_ptr<Move> & move, bool isLegalityTest) {
+void Board::handleMoveForFullAnalysis(const std::shared_ptr<Move> & move) {
+    _handleMove(move);
+    _calculateHasLegalMove();
+    _calculateLegalMoves();
+}
+
+void Board::handleMoveForSingleAnalysis(const std::shared_ptr<Move> & move) {
+    _handleMove(move);
+    _calculateHasLegalMove();
+}
+
+void Board::_handleMove(const std::shared_ptr<Move> & move) {
     MAINLOG("Handling move " << move->algebraicFormat())
     Position startPos = move->source();
     Position endPos = move->target();
@@ -371,7 +382,7 @@ void Board::handleMove(const std::shared_ptr<Move> & move, bool isLegalityTest) 
         _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
     }
 
-    _isCheck = scanForCheck();
+    _isCheck = _scanForCheck();
 
     _calculateFen();
     _doubleCheckFen();
@@ -379,19 +390,20 @@ void Board::handleMove(const std::shared_ptr<Move> & move, bool isLegalityTest) 
     MAINLOG("About to save FEN: " << _fen)
 
     _gameHistory.addMove(move, _fen);
-
-    if (!isLegalityTest) {
-        _calculateLegalMoves();
-    }
-
 }
 
-void Board::handleMoveUciFormat(const std::string & uciFormat) {
-    auto move = std::make_shared<Move>(uciFormat, shared_from_this());
-    handleMove(move);
+void Board::undoFullAnalysisMove(const std::shared_ptr<Move> & move) {
+    _undoMove(move);
+    _calculateHasLegalMove();
+    _calculateLegalMoves();
 }
 
-void Board::undoMove(const std::shared_ptr<Move> & move, bool isLegalityTest) {
+void Board::undoSingleAnalysisMove(const std::shared_ptr<Move> & move) {
+    _undoMove(move);
+    _calculateHasLegalMove();
+}
+
+void Board::_undoMove(const std::shared_ptr<Move> & move) {
     if (_gameHistory.isEmpty()) {
         MAINLOG("ERROR: Attempt to undo move when hisory is empty");
         throw std::runtime_error("ERROR: Attempt to undo move when hisory is empty");
@@ -448,39 +460,32 @@ void Board::undoMove(const std::shared_ptr<Move> & move, bool isLegalityTest) {
         throw std::runtime_error("ERROR: Attempt to get last FEN from history returned false after deleting previous move");
     }
 
-    MAINLOG("About to undo move by setting up from FEN: " << lastFen);
-
-    //setUpFromFenIncremental(lastFen, lastMove, lastCapturedPiece);
-    _undoMoveOnBoard(lastMove, lastFen, lastCapturedPiece, lastPromotedPawn, isLegalityTest);
-}
-
-void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn, bool isLegalityTest) {
-    MAINLOG("Undoing move " << move->algebraicFormat())
-    if (move->pieceType() == PieceType::KING) {
+    MAINLOG("Undoing move " << lastMove->algebraicFormat())
+    if (lastMove->pieceType() == PieceType::KING) {
         MAINLOG("HERE")
     }
     _calculateFen();
     std::string fenBeforeUndo = _fen;
 
-    Position startPos = move->source();
-    Position endPos = move->target();
+    Position startPos = lastMove->source();
+    Position endPos = lastMove->target();
     int startIndex = Position::internalToIndex(startPos);
     int endIndex = Position::internalToIndex(endPos);
 
-    if (move->isPromotion()) {
-        _pieces[startIndex] = promotedPawn;
-        if (move->isCapture()) {
-            _pieces[endIndex] = capturedPiece;
+    if (lastMove->isPromotion()) {
+        _pieces[startIndex] = lastPromotedPawn;
+        if (lastMove->isCapture()) {
+            _pieces[endIndex] = lastCapturedPiece;
         }
         else {
             _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
         }
     }
-    else if (move->isCastle()) {
+    else if (lastMove->isCastle()) {
         _pieces[startIndex] = _pieces[endIndex];
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
-        if (move->color() == Color::WHITE) {
-            if (move->castleSide() == CastleSide::KINGSIDE) {
+        if (lastMove->color() == Color::WHITE) {
+            if (lastMove->castleSide() == CastleSide::KINGSIDE) {
                 _pieces[Position::internalToIndex(Position(7, 0))] = _pieces[Position::internalToIndex(Position(5, 0))];
                 _pieces[Position::internalToIndex(Position(7, 0))]->setPosition(7, 0);
                 _pieces[Position::internalToIndex(Position(4, 0))] = _pieces[Position::internalToIndex(Position(6, 0))];
@@ -499,7 +504,7 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
             }
         }
         else {
-            if (move->castleSide() == CastleSide::KINGSIDE) {
+            if (lastMove->castleSide() == CastleSide::KINGSIDE) {
                 _pieces[Position::internalToIndex(Position(7, 7))] = _pieces[Position::internalToIndex(Position(5, 7))];
                 _pieces[Position::internalToIndex(Position(7, 7))]->setPosition(7, 7);
                 _pieces[Position::internalToIndex(Position(4, 7))] = _pieces[Position::internalToIndex(Position(6, 7))];
@@ -517,28 +522,28 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
                 _pieces[Position::internalToIndex(Position(3, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 3, 7, shared_from_this());
             }
         }
-        if (move->color() == Color::WHITE) {
+        if (lastMove->color() == Color::WHITE) {
             _whitePlayer.setHasCastled(false);
         }
         else {
             _blackPlayer.setHasCastled(false);
         }
     }
-    else if (move->isCapture()) {
+    else if (lastMove->isCapture()) {
         _pieces[startIndex] = _pieces[endIndex];
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
-        _pieces[endIndex] = capturedPiece;
+        _pieces[endIndex] = lastCapturedPiece;
     }
-    else if (move->isEnPassant()) {
+    else if (lastMove->isEnPassant()) {
         _pieces[startIndex] = _pieces[endIndex];
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
-        if (move->color() == Color::WHITE) {
+        if (lastMove->color() == Color::WHITE) {
             Position locationOfCapturedPawn(endPos.col, endPos.row - 1);
-            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = capturedPiece;
+            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = lastCapturedPiece;
         }
         else {
             Position locationOfCapturedPawn(endPos.col, endPos.row + 1);
-            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = capturedPiece;
+            _pieces[Position::internalToIndex(locationOfCapturedPawn)] = lastCapturedPiece;
         }
         _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
     }
@@ -548,26 +553,26 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
         _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
     }
 
-    if (move->enabledEnPassant()) {
+    if (lastMove->enabledEnPassant()) {
         _hasEnPassantTarget = false;
         _enPassantTarget = Position(0, 0);
     }
-    if (move->ruinedEnPassant()) {
+    if (lastMove->ruinedEnPassant()) {
         MAINLOG("Undoing move that ruined en passant")
         _hasEnPassantTarget = true;
-        _enPassantTarget = move->ruinedEnPassantTarget();
+        _enPassantTarget = lastMove->ruinedEnPassantTarget();
         MAINLOG("Setting board en passant target to " << _enPassantTarget.col << "," << _enPassantTarget.row)
     }
 
-    if (move->color() == Color::BLACK) {
+    if (lastMove->color() == Color::BLACK) {
         --_fullMoveNumber;
     }
 
-    _whosTurnToGo = move->color();
+    _whosTurnToGo = lastMove->color();
     _halfMoveClock = _prevHalfmoveClock;
 
-    if (move->ruinedCastling() == CastleSide::BOTH) {
-        if (move->color() == Color::WHITE) {
+    if (lastMove->ruinedCastling() == CastleSide::BOTH) {
+        if (lastMove->color() == Color::WHITE) {
             _whitePlayer.setCastlingRightsKingSide(true);
             _whitePlayer.setCastlingRightsQueenSide(true);
         }
@@ -576,16 +581,16 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
             _blackPlayer.setCastlingRightsQueenSide(true);
         }
     }
-    else if (move->ruinedCastling() == CastleSide::KINGSIDE) {
-        if (move->color() == Color::WHITE) {
+    else if (lastMove->ruinedCastling() == CastleSide::KINGSIDE) {
+        if (lastMove->color() == Color::WHITE) {
             _whitePlayer.setCastlingRightsKingSide(true);
         }
         else {
             _blackPlayer.setCastlingRightsKingSide(true);
         }
     }
-    else if (move->ruinedCastling() == CastleSide::QUEENSIDE) {
-        if (move->color() == Color::WHITE) {
+    else if (lastMove->ruinedCastling() == CastleSide::QUEENSIDE) {
+        if (lastMove->color() == Color::WHITE) {
             _whitePlayer.setCastlingRightsQueenSide(true);
         }
         else {
@@ -595,25 +600,22 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
 
     _calculateFen();
 
-    if (_fen.compare(fen) != 0) {
+    if (_fen.compare(lastFen) != 0) {
         MAINLOG("ERROR ERROR ERROR !!!!! Fen does not match after undo")
         MAINLOG("Expected fen:")
-        MAINLOG(fen)
+        MAINLOG(lastFen)
         MAINLOG("Fen after undo:")
         MAINLOG(_fen)
         MAINLOG("Fen before undo:")
         MAINLOG(fenBeforeUndo)
-        MAINLOG("Move was " << move->algebraicFormat())
+        MAINLOG("Move was " << lastMove->algebraicFormat())
         throw std::runtime_error("ERROR: Fen does not match after undo");
     }
 
-    _isCheck = scanForCheck();
-    if (!isLegalityTest) {
-        _calculateLegalMoves();
-    }
+    _isCheck = _scanForCheck();
 }
 
-bool Board::scanForCheck(bool otherPlayer) {
+bool Board::_scanForCheck(bool otherPlayer) {
     // Find the king whose turn it is
     std::shared_ptr<Pieces::Piece> king;
     if (!otherPlayer) {
@@ -638,10 +640,6 @@ bool Board::scanForCheck(bool otherPlayer) {
 
 //    MAINLOG("Checking if king on square " << king->position().col << "," << king->position().row << " is attacked")
     return isSquareAttacked(king->position(), oppositeColor(king->color()));
-}
-
-void Board::calculateLegalMoves(std::vector<std::shared_ptr<Move>> moves) const {
-
 }
 
 bool Board::isSquareAttacked(const Position & square, Color attackerColor) const {
@@ -739,26 +737,10 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
         // Cannot capture a king!
         return false;
     }
-    MAINLOG("Testing move for legality: " << move->algebraicFormat())
-    handleMove(move, true);
-//    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
-    bool result = !scanForCheck(true);
-    undoMove(move, true);
-    if (result) {
-        MAINLOG("Move is legal")
-    } else {
-        MAINLOG("Move is not legal")
-    }
+    _handleMove(move);
+    bool result = !_scanForCheck(true); // Check if the player that just moved is in check, which would make the move illegal.
+    _undoMove(move);
     return result;
-}
-
-int Board::findPiecePosByPosition(const Position & pos) {
-    for (size_t i = 0; i < _pieces.size(); ++i) {
-        if (_pieces[i]->position() == pos) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 void Board::_calculateLegalMoves() {
@@ -774,21 +756,23 @@ void Board::_calculateLegalMoves() {
     }
 }
 
+void Board::_calculateHasLegalMove() {
+    for (const auto & piece : _pieces) {
+        if (piece->color() != _whosTurnToGo) {
+            continue;
+        }
+
+        if (piece->calculateHasLegalMove()) {
+            _hasLegalMove = true;
+            return;
+        }
+        _hasLegalMove = false;
+    }
+}
+
 const std::vector<std::shared_ptr<Move>> & Board::getLegalMoves() const {
     return _legalMoves;
 }
-
-//void Board::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const {
-//    for (const auto & piece : _pieces) {
-//        if (piece->color() != _whosTurnToGo) {
-//            continue;
-//        }
-//
-//        std::vector<std::shared_ptr<Move>> pieceMoves;
-//        piece->getPossibleMoves(pieceMoves);
-//        possibleMoves.insert(possibleMoves.end(), pieceMoves.begin(), pieceMoves.end());
-//    }
-//}
 
 void Board::_calculateFen() {
     std::stringstream sstr;
@@ -878,14 +862,14 @@ bool Board::isCheckmate() {
     if (!_isCheck) {
         return false;
     }
-    return (_legalMoves.size() == 0);
+    return !_hasLegalMove;
 }
 
 bool Board::isStalemate() {
     if (_isCheck) {
         return false;
     }
-    return (_legalMoves.size() == 0);
+    return !_hasLegalMove;
 }
 
 void Board::_doubleCheckFen() {
