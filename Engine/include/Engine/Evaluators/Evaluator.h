@@ -13,7 +13,7 @@ class Evaluator {
 public:
     Evaluator() { }
     void setBoard(std::shared_ptr<Sascha::Gameplay::Board> board) { _board = board; }
-    virtual int getBestMoveIndex(std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) = 0;
+    virtual int getBestMoveIndex(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) = 0;
     static std::shared_ptr<Evaluator> createEvaluator();
 protected:
     std::shared_ptr<Sascha::Gameplay::Board> _board;

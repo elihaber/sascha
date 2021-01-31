@@ -5,6 +5,20 @@
 namespace Sascha {
 namespace Gameplay {
 
+void GameHistory::clear() {
+    while (!_fens.empty())
+        _fens.pop();
+    while (!_moves.empty())
+        _moves.pop();
+    while (!_capturedPieces.empty())
+        _capturedPieces.pop();
+    while (!_promotedPawns.empty())
+        _promotedPawns.pop();
+}
+void GameHistory::addStartupFen(const std::string & fen) {
+    _fens.push(fen);
+}
+
 void GameHistory::addMove(const std::shared_ptr<Move> & move, const std::string & fen) {
     _fens.push(fen);
     _moves.push(move);

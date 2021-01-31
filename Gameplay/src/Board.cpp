@@ -12,6 +12,8 @@ namespace Sascha {
 namespace Gameplay {
 
 void Board::setUpFromFen(const std::string & fen) {
+    _gameHistory.clear();
+    _gameHistory.addStartupFen(fen);
     auto blankPiece =std::make_shared<Pieces::BlankPiece>(shared_from_this());
     _pieces.clear();
     for (size_t i = 0; i < 64; ++i) {
@@ -168,7 +170,7 @@ void Board::setUpStartingPosition() {
     setUpFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
-void Board::handleMove(const std::shared_ptr<Move> & move) {
+void Board::handleMove(const std::shared_ptr<Move> & move, bool isLegalityTest) {
     MAINLOG("Handling move " << move->algebraicFormat())
     Position startPos = move->source();
     Position endPos = move->target();
@@ -319,7 +321,7 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
             rookEndPos.col = 5;
             rookEndPos.row = 0;
         }
-        else if (startPos.row == 0 && endPos.col > startPos.col) {
+        else if (startPos.row == 0 && endPos.col < startPos.col) {
             rookStartPos.col = 0;
             rookStartPos.row = 0;
             rookEndPos.col = 3;
@@ -377,6 +379,11 @@ void Board::handleMove(const std::shared_ptr<Move> & move) {
     MAINLOG("About to save FEN: " << _fen)
 
     _gameHistory.addMove(move, _fen);
+
+    if (!isLegalityTest) {
+        _calculateLegalMoves();
+    }
+
 }
 
 void Board::handleMoveUciFormat(const std::string & uciFormat) {
@@ -384,7 +391,7 @@ void Board::handleMoveUciFormat(const std::string & uciFormat) {
     handleMove(move);
 }
 
-void Board::undoMove(const std::shared_ptr<Move> & move) {
+void Board::undoMove(const std::shared_ptr<Move> & move, bool isLegalityTest) {
     if (_gameHistory.isEmpty()) {
         MAINLOG("ERROR: Attempt to undo move when hisory is empty");
         throw std::runtime_error("ERROR: Attempt to undo move when hisory is empty");
@@ -444,10 +451,10 @@ void Board::undoMove(const std::shared_ptr<Move> & move) {
     MAINLOG("About to undo move by setting up from FEN: " << lastFen);
 
     //setUpFromFenIncremental(lastFen, lastMove, lastCapturedPiece);
-    _undoMoveOnBoard(lastMove, lastFen, lastCapturedPiece, lastPromotedPawn);
+    _undoMoveOnBoard(lastMove, lastFen, lastCapturedPiece, lastPromotedPawn, isLegalityTest);
 }
 
-void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn) {
+void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn, bool isLegalityTest) {
     MAINLOG("Undoing move " << move->algebraicFormat())
     if (move->pieceType() == PieceType::KING) {
         MAINLOG("HERE")
@@ -601,6 +608,9 @@ void Board::_undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::stri
     }
 
     _isCheck = scanForCheck();
+    if (!isLegalityTest) {
+        _calculateLegalMoves();
+    }
 }
 
 bool Board::scanForCheck(bool otherPlayer) {
@@ -730,10 +740,10 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
         return false;
     }
     MAINLOG("Testing move for legality: " << move->algebraicFormat())
-    handleMove(move);
+    handleMove(move, true);
 //    MAINLOG("Player who is to move: " << (int)_whosTurnToGo)
     bool result = !scanForCheck(true);
-    undoMove(move);
+    undoMove(move, true);
     if (result) {
         MAINLOG("Move is legal")
     } else {
@@ -751,7 +761,8 @@ int Board::findPiecePosByPosition(const Position & pos) {
     return -1;
 }
 
-void Board::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const {
+void Board::_calculateLegalMoves() {
+    _legalMoves.clear();
     for (const auto & piece : _pieces) {
         if (piece->color() != _whosTurnToGo) {
             continue;
@@ -759,9 +770,25 @@ void Board::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves)
 
         std::vector<std::shared_ptr<Move>> pieceMoves;
         piece->getPossibleMoves(pieceMoves);
-        possibleMoves.insert(possibleMoves.end(), pieceMoves.begin(), pieceMoves.end());
+        _legalMoves.insert(_legalMoves.end(), pieceMoves.begin(), pieceMoves.end());
     }
 }
+
+const std::vector<std::shared_ptr<Move>> & Board::getLegalMoves() const {
+    return _legalMoves;
+}
+
+//void Board::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const {
+//    for (const auto & piece : _pieces) {
+//        if (piece->color() != _whosTurnToGo) {
+//            continue;
+//        }
+//
+//        std::vector<std::shared_ptr<Move>> pieceMoves;
+//        piece->getPossibleMoves(pieceMoves);
+//        possibleMoves.insert(possibleMoves.end(), pieceMoves.begin(), pieceMoves.end());
+//    }
+//}
 
 void Board::_calculateFen() {
     std::stringstream sstr;
@@ -851,18 +878,14 @@ bool Board::isCheckmate() {
     if (!_isCheck) {
         return false;
     }
-    std::vector<std::shared_ptr<Move>> moves;
-    getPossibleMoves(moves);
-    return (moves.size() == 0);
+    return (_legalMoves.size() == 0);
 }
 
 bool Board::isStalemate() {
     if (_isCheck) {
         return false;
     }
-    std::vector<std::shared_ptr<Move>> moves;
-    getPossibleMoves(moves);
-    return (moves.size() == 0);
+    return (_legalMoves.size() == 0);
 }
 
 void Board::_doubleCheckFen() {

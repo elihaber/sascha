@@ -1,6 +1,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <chrono>
 #include "Engine/Evaluators/TotalPieceValueEvaluator.h"
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
@@ -15,9 +16,29 @@ namespace Evaluators {
 using Gameplay::Board;
 using Gameplay::Move;
 
-int TotalPieceValueEvaluator::getBestMoveIndex(std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) {
+int TotalPieceValueEvaluator::getBestMoveIndex(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) {
     _currentLine.clear();
+    _totalHandle1Time = 0;
+    _totalHandle2Time = 0;
+    _totalHandle3Time = 0;
+    _totalUndo1Time = 0;
+    _totalUndo2Time = 0;
+    _totalUndo3Time = 0;
+    _totalTime = 0;
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     auto result = _calcBestEval(RECURSION_LEVEL);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    _totalTime = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+
+    RECURSIONLOG("_totalHandle1Time " << _totalHandle1Time)
+    RECURSIONLOG("_totalHandle2Time " << _totalHandle2Time)
+    RECURSIONLOG("_totalHandle3Time " << _totalHandle3Time)
+    RECURSIONLOG("_totalUndo1Time " << _totalUndo1Time)
+    RECURSIONLOG("_totalUndo2Time " << _totalUndo2Time)
+    RECURSIONLOG("_totalUndo3Time " << _totalUndo3Time)
+    RECURSIONLOG("_totalTime " << _totalTime)
+
     for (size_t i = 0; i < moves.size(); ++i) {
         if (result.second->uciFormat().compare(moves[i]->uciFormat()) == 0) {
             MAINLOG("Best move is " << result.second->algebraicFormat() << " with an evaluation of " << result.first)
@@ -29,14 +50,14 @@ int TotalPieceValueEvaluator::getBestMoveIndex(std::vector<std::shared_ptr<Sasch
 }
 
 std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(int numPliesLeft) {
-    std::vector<std::shared_ptr<Move>> possibleMoves;
+    ;
 
     std::string logPrefix;
     for (size_t i = 0; i < RECURSION_LEVEL - numPliesLeft; ++i) {
         logPrefix += "    ";
     }
 
-    _board->getPossibleMoves(possibleMoves);
+    auto possibleMoves = _board->getLegalMoves();
 
     float bestEval = -100000.0;
     if (_board->whosTurnToGo() == Color::BLACK) {
@@ -46,9 +67,22 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
     if (numPliesLeft == 0) {
         std::shared_ptr<Move> bestMove;
         for (auto move : possibleMoves) {
-            _board->handleMove(move);
-            float eval = _evaluateMoveSingle(move);
-            _board->undoMove(move);
+
+            auto t1 = std::chrono::high_resolution_clock::now();
+            _board->handleMove(move, true);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalHandle1Time += duration;
+
+            bool evaluationCalculatedPossibleMoves;
+            float eval = _evaluateMoveSingle(move, evaluationCalculatedPossibleMoves);
+
+            t1 = std::chrono::high_resolution_clock::now();
+            _board->undoMove(move, !evaluationCalculatedPossibleMoves);
+            t2 = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalUndo1Time += duration;
+
             if (_board->whosTurnToGo() == Color::WHITE) {
                 if (eval > bestEval) {
                     bestEval = eval;
@@ -73,11 +107,23 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
         std::multimap<float, std::shared_ptr<Move>> orderedMoves;
         std::map<std::string, float> moveAPrioriEvals;
         for (auto move : possibleMoves) {
-            _board->handleMove(move);
-            float eval = _evaluateMoveSingle(move);
+
+            auto t1 = std::chrono::high_resolution_clock::now();
+            _board->handleMove(move, true);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalHandle2Time += duration;
+
+            bool evaluationCalculatedPossibleMoves;
+            float eval = _evaluateMoveSingle(move, evaluationCalculatedPossibleMoves);
             orderedMoves.insert(std::make_pair(eval, move));
             moveAPrioriEvals.insert(std::make_pair(move->algebraicFormat(), eval));
-            _board->undoMove(move);
+
+            t1 = std::chrono::high_resolution_clock::now();
+            _board->undoMove(move, !evaluationCalculatedPossibleMoves);
+            t2 = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalUndo2Time += duration;
         }
 
         // Do this better because if some of the values will be the same, then the order will be static.
@@ -128,10 +174,22 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
         std::multimap<float, std::shared_ptr<Move>> evaluatedBestMoves;
         for (int i = 0; i < bestMoves.size(); ++i) {
             RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
+
+            auto t1 = std::chrono::high_resolution_clock::now();
             _board->handleMove(bestMoves[i]);
+            auto t2 = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalHandle3Time += duration;
+
             _currentLine.push_back(bestMoves[i]);
             float moveEval = _calcBestEval(numPliesLeft - 1).first;
+
+            t1 = std::chrono::high_resolution_clock::now();
             _board->undoMove(bestMoves[i]);
+            t2 = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+            _totalUndo3Time += duration;
+
             _currentLine.pop_back();
             evaluatedBestMoves.insert(std::make_pair(moveEval, bestMoves[i]));
             RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
@@ -283,7 +341,8 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int numMoves, const st
     }
 }
 
-float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move) {
+float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move, bool & evaluationCalculatedPossibleMoves) {
+    evaluationCalculatedPossibleMoves = false;
     float eval = 0.0;
     auto pieces = _board->pieces();
     for (auto piece : pieces) {
@@ -307,17 +366,22 @@ float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move) 
             eval += (9.0 * factor);
         }
     }
-    if (_board->isCheckmate()) {
-        if (_board->whosTurnToGo() == Color::WHITE) {
-            eval = 100000.0;
-        }
-        else {
-            eval = -100000.0;
+    if (_board->isCheck()) {
+        _board->_calculateLegalMoves();
+        evaluationCalculatedPossibleMoves = true;
+        if (_board->isCheckmate()) {
+            if (_board->whosTurnToGo() == Color::WHITE) {
+                eval = 100000.0;
+            }
+            else {
+                eval = -100000.0;
+            }
         }
     }
-    else if (_board->isStalemate()) {
-        eval = 0.0;
-    }
+    // TODO: DOESN"T CHECK FOR STALEMATE BECAUSE I DON"T WANT TO CALCULATE ALL POSSIBLE MOVES EVERY TIME!
+//    else if (_board->isStalemate()) {
+//        eval = 0.0;
+//    }
     return eval;
 }
 

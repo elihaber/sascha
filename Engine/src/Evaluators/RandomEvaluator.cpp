@@ -5,7 +5,7 @@ namespace Gameplay { class Board; class Move; }
 namespace Engine {
 namespace Evaluators {
 
-int RandomEvaluator::getBestMoveIndex(std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) {
+int RandomEvaluator::getBestMoveIndex(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) {
     return rand() % moves.size();
 }
 

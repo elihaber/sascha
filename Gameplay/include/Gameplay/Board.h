@@ -17,11 +17,11 @@ public:
     Board(Player & whitePlayer, Player & blackPlayer) : _whitePlayer(whitePlayer), _blackPlayer(blackPlayer) { }
     void setUpStartingPosition();
     void setUpFromFen(const std::string & fen);
-    void handleMove(const std::shared_ptr<Move> & move);
-    void undoMove(const std::shared_ptr<Move> & move);
+    void handleMove(const std::shared_ptr<Move> & move, bool isLegalityTest = false);
+    void undoMove(const std::shared_ptr<Move> & move, bool isLegalityTest = false);
     void handleMoveUciFormat(const std::string & uciFormat);
     int findPiecePosByPosition(const Position & pos);
-    void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const;
+    //void getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) const;
     bool scanForCheck(bool otherPlayer = false);
     bool isCheck() const { return _isCheck; }
     bool isSquareAttacked(const Position & square, Color attackerColor) const;
@@ -43,11 +43,13 @@ public:
     std::vector<std::shared_ptr<Pieces::Piece>> pieces() { return _pieces; }
     bool isCheckmate();
     bool isStalemate();
+    const std::vector<std::shared_ptr<Move>> & getLegalMoves() const;
+    void _calculateLegalMoves();
 
 private:
     void _calculateFen();
     void _doubleCheckFen();
-    void _undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn);
+    void _undoMoveOnBoard(const std::shared_ptr<Move> & move, const std::string & fen, const std::shared_ptr<Piece> & capturedPiece, const std::shared_ptr<Piece> & promotedPawn, bool isLegalityTest = false);
 
     std::vector<std::shared_ptr<Pieces::Piece>> _pieces;
     Color _whosTurnToGo;
@@ -60,6 +62,7 @@ private:
     bool _isCheck;
     std::string _fen;
     GameHistory _gameHistory;
+    std::vector<std::shared_ptr<Move>> _legalMoves;
 
     // Previous board state
     int _prevHalfmoveClock;

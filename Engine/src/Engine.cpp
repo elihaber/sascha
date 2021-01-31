@@ -85,8 +85,7 @@ void Engine::_handleInputQueue() {
 
         if (message->messageType() == MessageType::GO) {
             MAINLOG("Handling go")
-            std::vector<std::shared_ptr<Move>> possibleMoves;
-            _board->getPossibleMoves(possibleMoves);
+            const auto & possibleMoves = _board->getLegalMoves();
             MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
             for (size_t i = 0; i < possibleMoves.size(); ++i) {
                 MAINLOG_NNL(" " << possibleMoves[i]->algebraicFormat())
