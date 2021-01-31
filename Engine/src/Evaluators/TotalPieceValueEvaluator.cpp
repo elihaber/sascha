@@ -26,6 +26,8 @@ int TotalPieceValueEvaluator::getBestMoveIndex(const std::vector<std::shared_ptr
     _totalUndo3Time = 0;
     _totalTime = 0;
 
+    float _currEval = _evaluateMoveSingle();
+
     auto t1 = std::chrono::high_resolution_clock::now();
     auto result = _calcBestEval(RECURSION_LEVEL);
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -50,7 +52,6 @@ int TotalPieceValueEvaluator::getBestMoveIndex(const std::vector<std::shared_ptr
 }
 
 std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(int numPliesLeft) {
-    ;
 
     std::string logPrefix;
     for (size_t i = 0; i < RECURSION_LEVEL - numPliesLeft; ++i) {
@@ -74,16 +75,10 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalHandle1Time += duration;
 
-            bool evaluationCalculatedPossibleMoves;
-            float eval = _evaluateMoveSingle(move, evaluationCalculatedPossibleMoves);
+            float eval = _evaluateMoveSingle();
 
             t1 = std::chrono::high_resolution_clock::now();
-            if (evaluationCalculatedPossibleMoves) {
-                _board->undoFullAnalysisMove(move);
-            }
-            else {
-                _board->undoSingleAnalysisMove(move);
-            }
+            _board->undoSingleAnalysisMove(move);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalUndo1Time += duration;
@@ -119,141 +114,174 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalHandle2Time += duration;
 
-            bool evaluationCalculatedPossibleMoves;
-            float eval = _evaluateMoveSingle(move, evaluationCalculatedPossibleMoves);
+            float eval = _evaluateMoveSingle();
             orderedMoves.insert(std::make_pair(eval, move));
             moveAPrioriEvals.insert(std::make_pair(move->algebraicFormat(), eval));
 
             t1 = std::chrono::high_resolution_clock::now();
-            if (evaluationCalculatedPossibleMoves) {
-                _board->undoFullAnalysisMove(move);
-            }
-            else {
-                _board->undoSingleAnalysisMove(move);
-            }
+            _board->undoSingleAnalysisMove(move);
             t2 = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
             _totalUndo2Time += duration;
         }
 
-        // Do this better because if some of the values will be the same, then the order will be static.
-        std::vector<std::shared_ptr<Move>> bestMoves;
-        std::vector<float> bestEvals;
-        int numRequired = NUM_POSSIBLE_MOVES;
-        if (_board->whosTurnToGo() == Color::WHITE) {
-            _getBestMovesFromSortedMap(numRequired, orderedMoves, orderedMoves.rbegin(), orderedMoves.rend(), bestMoves);
-        }
-        else {
-            _getBestMovesFromSortedMap(numRequired, orderedMoves, orderedMoves.begin(), orderedMoves.end(), bestMoves);
-        }
+        std::multimap<float, std::shared_ptr<Move>> evaluatedBestMoves;
+        std::vector<std::shared_ptr<Move>> alreadyTestedMoves;
 
-        if (!bestMoves.empty()) {
-            RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[0]->color()) << " Out of " << orderedMoves.size() << " candidate moves, selected " << bestMoves.size())
-        }
-        else if (!orderedMoves.empty()) {
-            RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Failed to select any candidate moves")
-        }
-        else {
-            if (_board->isCheck()) {
-                // Checkmate
-                if (_board->whosTurnToGo() == Color::WHITE) {
-                    return std::make_pair(-100000.0, nullptr);
-                }
-                else {
-                    return std::make_pair(100000.0, nullptr);
-                }
+        while (true) {
+
+            // Do this better because if some of the values will be the same, then the order will be static.
+            std::vector<std::shared_ptr<Move>> bestMoves;
+            std::vector<float> bestEvals;
+            int numRequired = NUM_POSSIBLE_MOVES;
+            if (_board->whosTurnToGo() == Color::WHITE) {
+                _getBestMovesFromSortedMap(RECURSION_LEVEL - numPliesLeft, numRequired, orderedMoves, orderedMoves.rbegin(), orderedMoves.rend(), alreadyTestedMoves, bestMoves);
             }
             else {
-                // Stalemate
-                return std::make_pair(0.0, nullptr);
+                _getBestMovesFromSortedMap(RECURSION_LEVEL - numPliesLeft, numRequired, orderedMoves, orderedMoves.begin(), orderedMoves.end(), alreadyTestedMoves, bestMoves);
             }
-            RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " No candidate moves")
-        }
-        
-//        MAINLOG("Level: " << (RECURSION_LEVEL - numPliesLeft))
-//        MAINLOG_NNL(" Current line:")
-//        for (int i = 0; i < _currentLine.size(); ++i) {
-//            MAINLOG_NNL(" " << _currentLine[i]->algebraicFormat())
-//        }
-//        MAINLOG_NNL(" Candidate moves:")
-//        for (int i = 0; i < bestMoves.size(); ++i) {
-//            MAINLOG_NNL(" " << bestMoves[i]->algebraicFormat())
-//        }
-//        MAINLOG("")
 
-        std::multimap<float, std::shared_ptr<Move>> evaluatedBestMoves;
-        for (int i = 0; i < bestMoves.size(); ++i) {
-            RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
-
-            auto t1 = std::chrono::high_resolution_clock::now();
-            _board->handleMoveForFullAnalysis(bestMoves[i]);
-            auto t2 = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-            _totalHandle3Time += duration;
-
-            _currentLine.push_back(bestMoves[i]);
-            float moveEval = _calcBestEval(numPliesLeft - 1).first;
-
-            t1 = std::chrono::high_resolution_clock::now();
-            _board->undoFullAnalysisMove(bestMoves[i]);
-            t2 = std::chrono::high_resolution_clock::now();
-            duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-            _totalUndo3Time += duration;
-
-            _currentLine.pop_back();
-            evaluatedBestMoves.insert(std::make_pair(moveEval, bestMoves[i]));
-            RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
-        }
-        if (_board->whosTurnToGo() == Color::WHITE) {
-            std::vector<std::shared_ptr<Move>> choiceMoves;
-            float finalEval = 0.0;
-            for (auto iter = evaluatedBestMoves.rbegin(); iter != evaluatedBestMoves.rend(); ++iter) {
-                if (iter == evaluatedBestMoves.rbegin()) {
-                    choiceMoves.push_back(iter->second);
-                    finalEval = iter->first;
-                    continue;
-                }
-                if (_compareFloat(iter->first, finalEval)) {
-                    choiceMoves.push_back(iter->second);
+            if (!bestMoves.empty()) {
+                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[0]->color()) << " Out of " << orderedMoves.size() << " candidate moves, selected " << bestMoves.size())
+            }
+            else if (!orderedMoves.empty()) {
+                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Failed to select any candidate moves")
+            }
+            else {
+                if (_board->isCheck()) {
+                    // Checkmate
+                    if (_board->whosTurnToGo() == Color::WHITE) {
+                        return std::make_pair(-100000.0, nullptr);
+                    }
+                    else {
+                        return std::make_pair(100000.0, nullptr);
+                    }
                 }
                 else {
-                    break;
+                    // Stalemate
+                    return std::make_pair(0.0, nullptr);
                 }
+                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " No candidate moves")
             }
-            int index = rand() % choiceMoves.size();
-            return std::make_pair(finalEval, choiceMoves[index]);
-        } else {
-            std::vector<std::shared_ptr<Move>> choiceMoves;
-            float finalEval = 0.0;
-            for (auto iter = evaluatedBestMoves.begin(); iter != evaluatedBestMoves.end(); ++iter) {
-                if (iter == evaluatedBestMoves.begin()) {
-                    choiceMoves.push_back(iter->second);
-                    finalEval = iter->first;
-                    continue;
-                }
-                if (_compareFloat(iter->first, finalEval)) {
-                    choiceMoves.push_back(iter->second);
-                }
-                else {
-                    break;
-                }
+            
+    //        MAINLOG("Level: " << (RECURSION_LEVEL - numPliesLeft))
+    //        MAINLOG_NNL(" Current line:")
+    //        for (int i = 0; i < _currentLine.size(); ++i) {
+    //            MAINLOG_NNL(" " << _currentLine[i]->algebraicFormat())
+    //        }
+    //        MAINLOG_NNL(" Candidate moves:")
+    //        for (int i = 0; i < bestMoves.size(); ++i) {
+    //            MAINLOG_NNL(" " << bestMoves[i]->algebraicFormat())
+    //        }
+    //        MAINLOG("")
+
+            for (int i = 0; i < bestMoves.size(); ++i) {
+                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
+
+                auto t1 = std::chrono::high_resolution_clock::now();
+                _board->handleMoveForFullAnalysis(bestMoves[i]);
+                auto t2 = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+                _totalHandle3Time += duration;
+
+                _currentLine.push_back(bestMoves[i]);
+                float moveEval = _calcBestEval(numPliesLeft - 1).first;
+
+                t1 = std::chrono::high_resolution_clock::now();
+                _board->undoFullAnalysisMove(bestMoves[i]);
+                t2 = std::chrono::high_resolution_clock::now();
+                duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+                _totalUndo3Time += duration;
+
+                _currentLine.pop_back();
+                evaluatedBestMoves.insert(std::make_pair(moveEval, bestMoves[i]));
+                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
             }
-            int index = rand() % choiceMoves.size();
-            return std::make_pair(finalEval, choiceMoves[index]);
+            for (auto move : bestMoves) {
+                alreadyTestedMoves.push_back(move);
+            }
+            bool needMoreMoves = false;
+            std::pair<float, std::shared_ptr<Move>> result;
+            if (_board->whosTurnToGo() == Color::WHITE) {
+                std::vector<std::shared_ptr<Move>> choiceMoves;
+                float finalEval = 0.0;
+                for (auto iter = evaluatedBestMoves.rbegin(); iter != evaluatedBestMoves.rend(); ++iter) {
+                    if (iter == evaluatedBestMoves.rbegin()) {
+                        choiceMoves.push_back(iter->second);
+                        finalEval = iter->first;
+                        if (RECURSION_LEVEL - numPliesLeft == 0 && finalEval < _currEval) {
+                            needMoreMoves = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    if (_compareFloat(iter->first, finalEval)) {
+                        choiceMoves.push_back(iter->second);
+                    }
+                    else {
+                        break;
+                    }
+                }
+                int index = rand() % choiceMoves.size();
+                //return std::make_pair(finalEval, choiceMoves[index]);
+                result = std::make_pair(finalEval, choiceMoves[index]);
+            } else {
+                std::vector<std::shared_ptr<Move>> choiceMoves;
+                float finalEval = 0.0;
+                for (auto iter = evaluatedBestMoves.begin(); iter != evaluatedBestMoves.end(); ++iter) {
+                    if (iter == evaluatedBestMoves.begin()) {
+                        choiceMoves.push_back(iter->second);
+                        finalEval = iter->first;
+                        if (RECURSION_LEVEL - numPliesLeft == 0 && finalEval > _currEval) {
+                            needMoreMoves = true;
+                            break;
+                        }
+                        continue;
+                    }
+                    if (_compareFloat(iter->first, finalEval)) {
+                        choiceMoves.push_back(iter->second);
+                    }
+                    else {
+                        break;
+                    }
+                }
+                int index = rand() % choiceMoves.size();
+                //return std::make_pair(finalEval, choiceMoves[index]);
+                result = std::make_pair(finalEval, choiceMoves[index]);
+            }
+            if (RECURSION_LEVEL - numPliesLeft == 0 && needMoreMoves && alreadyTestedMoves.size() < orderedMoves.size()) {
+                continue;
+            }
+            if (RECURSION_LEVEL - numPliesLeft == 0) { RECURSIONLOG("Returning move " << result.second->algebraicFormat() << " with eval " << result.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves") }
+            return result;
         }
     }
 }
 
-void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves) {
+void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves) {
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> stagingArea;
 
 //    RECURSIONLOG("================ Selecting " << numMoves << " moves from " << orderedMoves.size() << " candidates")
     int numMovesStillNeeded = numMoves;
     float prevVal = 0.0;
+    bool addedOneToStagingArea = false;
     for (auto iter = start; iter != end; ++iter) {
-        if (iter == start) {
+        bool alreadyTested = false;
+        if (level == 0) {
+            for (auto testedMove : testedMoves) {
+                if (*testedMove == *iter->second) {
+                    alreadyTested = true;
+                    break;
+                }
+            }
+        }
+        if (alreadyTested) {
+            continue;
+        }
+        if (!addedOneToStagingArea) {
             stagingArea.push_back(iter->second);
             prevVal = iter->first;
+            addedOneToStagingArea = true;
 //            RECURSIONLOG("Moved first move into staging area with eval of " << prevVal << " staging area size is now " << stagingArea.size())
             continue;
         }
@@ -300,18 +328,31 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int numMoves, const st
             stagingArea.erase(stagingArea.begin() + index);
         }
     }
-//    RECURSIONLOG("================")
 }
 
-void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves) {
+void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves) {
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> stagingArea;
 
     int numMovesStillNeeded = numMoves;
     float prevVal = 0.0;
+    bool addedOneToStagingArea = false;
     for (auto iter = start; iter != end; ++iter) {
-        if (iter == start) {
+        bool alreadyTested = false;
+        if (level == 0) {
+            for (auto testedMove : testedMoves) {
+                if (*testedMove == *iter->second) {
+                    alreadyTested = true;
+                    break;
+                }
+            }
+        }
+        if (alreadyTested) {
+            continue;
+        }
+        if (!addedOneToStagingArea) {
             stagingArea.push_back(iter->second);
             prevVal = iter->first;
+            addedOneToStagingArea = true;
             continue;
         }
         if (iter->first == prevVal) {
@@ -351,8 +392,7 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int numMoves, const st
     }
 }
 
-float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move, bool & evaluationCalculatedPossibleMoves) {
-    evaluationCalculatedPossibleMoves = false;
+float TotalPieceValueEvaluator::_evaluateMoveSingle() {
     float eval = 0.0;
     auto pieces = _board->pieces();
     for (auto piece : pieces) {
@@ -377,8 +417,6 @@ float TotalPieceValueEvaluator::_evaluateMoveSingle(std::shared_ptr<Move> move, 
         }
     }
     if (_board->isCheck()) {
-        _board->_calculateLegalMoves();
-        evaluationCalculatedPossibleMoves = true;
         if (_board->isCheckmate()) {
             if (_board->whosTurnToGo() == Color::WHITE) {
                 eval = 100000.0;

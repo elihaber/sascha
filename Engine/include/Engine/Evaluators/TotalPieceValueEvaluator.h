@@ -18,11 +18,12 @@ public:
 
 private:
     std::pair<float, std::shared_ptr<Gameplay::Move>>  _calcBestEval(int numPliesLeft);
-    float _evaluateMoveSingle(std::shared_ptr<Gameplay::Move> move, bool & evaluationCalculatedPossibleMoves);
-    void _getBestMovesFromSortedMap(int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
-    void _getBestMovesFromSortedMap(int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
+    float _evaluateMoveSingle();
+    void _getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
+    void _getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
     bool _compareFloat(float x, float y, float epsilon = 0.001f);
 
+    float _currEval;
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> _currentLine;
     long _totalHandle1Time;
     long _totalHandle2Time;
