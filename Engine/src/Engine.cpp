@@ -83,17 +83,11 @@ void Engine::_handleInputQueue() {
 
         if (message->messageType() == MessageType::GO) {
             MAINLOG("Handling go")
-            const auto & possibleMoves = _board->getLegalMoves();
-            MAINLOG_NNL("Got " << possibleMoves.size() << " possible moves:")
-            for (size_t i = 0; i < possibleMoves.size(); ++i) {
-                MAINLOG_NNL(" " << possibleMoves[i]->algebraicFormat())
-            }
-            MAINLOG("");
             _evaluator->setBoard(_board);
-            int moveIndex = _evaluator->getBestMoveIndex(possibleMoves);
-            MAINLOG("Selected index " << moveIndex << " which is " << possibleMoves[moveIndex]->algebraicFormat())
+            auto bestMove = _evaluator->getBestMove();
+            MAINLOG("Selected best move " << bestMove->algebraicFormat())
             auto bestMoveMessage = std::make_shared<BestMoveMessage>();
-            bestMoveMessage->setMove1(possibleMoves[moveIndex]->uciFormat());
+            bestMoveMessage->setMove1(bestMove->uciFormat());
             _outgoingMessages.addMessage(bestMoveMessage);
         }
 

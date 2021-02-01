@@ -14,7 +14,7 @@ class TotalPieceValueEvaluator : public Evaluator {
 public:
     TotalPieceValueEvaluator() : Evaluator() { }
 
-    virtual int getBestMoveIndex(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) override;
+    virtual std::shared_ptr<Sascha::Gameplay::Move> getBestMove() override;
 
 private:
     std::pair<float, std::shared_ptr<Gameplay::Move>>  _calcBestEval(int numPliesLeft);

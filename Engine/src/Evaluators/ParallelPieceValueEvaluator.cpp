@@ -18,7 +18,7 @@ namespace Evaluators {
 using Gameplay::Board;
 using Gameplay::Move;
 
-int ParallelPieceValueEvaluator::getBestMoveIndex(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & moves) {
+std::shared_ptr<Sascha::Gameplay::Move> ParallelPieceValueEvaluator::getBestMove() {
     _currentLine.clear();
     _totalHandle1Time = 0;
     _totalHandle2Time = 0;
@@ -41,10 +41,11 @@ int ParallelPieceValueEvaluator::getBestMoveIndex(const std::vector<std::shared_
     RECURSIONLOG("_totalUndo3Time " << _totalUndo3Time)
     RECURSIONLOG("_totalTime " << _totalTime)
 
+    auto moves = _board->getLegalMoves();
     for (size_t i = 0; i < moves.size(); ++i) {
         if (result.second->uciFormat().compare(moves[i]->uciFormat()) == 0) {
             MAINLOG("Best move is " << result.second->algebraicFormat() << " with an evaluation of " << result.first)
-            return i;
+            return moves[i];
         }
     }
     MAINLOG("The evaluation result " << result.second->algebraicFormat() << " did not match any of the possible moves")
