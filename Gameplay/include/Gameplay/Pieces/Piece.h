@@ -13,6 +13,7 @@ class Move;
 
 namespace Pieces {
 
+
 class Piece {
 public:
     Piece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board) : _pieceType(pieceType), _color(color), _position(col, row), _board(board) { }
@@ -29,8 +30,10 @@ public:
     void setPieceType(PieceType val) { _pieceType = val; }
 
     static std::shared_ptr<Piece> createPiece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board);
-
+    static void CreateBlankPiece(std::shared_ptr<Board> board) { GenericBlankPiece = Piece::createPiece(PieceType::BLANK, Color::WHITE, 0, 0, board); }
+    static std::shared_ptr<Piece> GetBlankPiece() { return GenericBlankPiece; }
 protected:
+    static std::shared_ptr<Piece> GenericBlankPiece;
     int _maxVal;
     bool _isOnBoard;
     Color _color;

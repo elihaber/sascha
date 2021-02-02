@@ -53,12 +53,12 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
     else {
         if (_board->blackPlayer().hasCastlingRightsKingSide()) {
             if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 7)) && !_board->isSquareAttacked(Position(5, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 7)) && !_board->isSquareAttacked(Position(6, 7), oppositeColor(_color))) {
-                potentialTargets.push_back(Position(6, 0));
+                potentialTargets.push_back(Position(6, 7));
             }
         }
         if (_board->blackPlayer().hasCastlingRightsQueenSide()) {
             if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 7)) && !_board->isSquareAttacked(Position(3, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 7)) && !_board->isSquareAttacked(Position(2, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 7))) {
-                potentialTargets.push_back(Position(2, 0));
+                potentialTargets.push_back(Position(2, 7));
             }
         }
     }

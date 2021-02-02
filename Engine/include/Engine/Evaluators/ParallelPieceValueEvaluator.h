@@ -14,7 +14,7 @@ class ParallelPieceValueEvaluator : public Evaluator {
 public:
     ParallelPieceValueEvaluator() : Evaluator() { }
 
-    virtual std::shared_ptr<Sascha::Gameplay::Move> getBestMove() override;
+    virtual void calculateBestMove() override;
 
 private:
     std::pair<float, std::shared_ptr<Gameplay::Move>>  _calcBestEval(std::shared_ptr<Gameplay::Board> board, int numPliesLeft);

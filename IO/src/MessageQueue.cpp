@@ -23,5 +23,10 @@ std::shared_ptr<Message> MessageQueue::readNextMessage() {
     return message;
 }
 
+int MessageQueue::size() {
+    std::lock_guard<std::mutex> lg(_queProtector);
+    return _messageQue.size();
+}
+
 }
 }

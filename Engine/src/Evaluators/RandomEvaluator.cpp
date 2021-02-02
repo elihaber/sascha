@@ -6,10 +6,12 @@ namespace Gameplay { class Board; class Move; }
 namespace Engine {
 namespace Evaluators {
 
-std::shared_ptr<Sascha::Gameplay::Move> RandomEvaluator::getBestMove() {
+void RandomEvaluator::calculateBestMove() {
+    _isDone = false;
     auto moves = _board->getLegalMoves();
     auto index = rand() % moves.size();
-    return moves[index];
+    _calculatedMove = moves[index];
+    _isDone = true;
 }
 
 }

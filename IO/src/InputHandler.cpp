@@ -46,6 +46,7 @@ void InputHandler::start(std::future<void> futureObj) {
         if (line.compare("quit") == 0) {
             std::this_thread::sleep_for(300ms);
         }
+
         std::this_thread::sleep_for(100ms);
     }
 }

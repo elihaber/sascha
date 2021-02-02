@@ -12,14 +12,16 @@ namespace Sascha {
 namespace Gameplay {
 
 void Board::setUpFromFen(const std::string & fen) {
+    MAINLOG("Setting up board from FEN: " << fen)
+    _pieces.clear();
     _gameHistory.clear();
     _gameHistory.addStartupFen(fen);
-    auto blankPiece =std::make_shared<Pieces::BlankPiece>(shared_from_this());
+    Piece::CreateBlankPiece(shared_from_this());
     _pieces.clear();
     for (size_t i = 0; i < 64; ++i) {
         Position pos;
         Position::indexToInternal(i, pos);
-        _pieces.push_back(Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, pos.col, pos.row, shared_from_this()));
+        _pieces.push_back(Pieces::Piece::GetBlankPiece());
     }
     //_pieces.assign(64, blankPiece);
     int pos = 0;
@@ -171,18 +173,19 @@ void Board::setUpStartingPosition() {
 }
 
 void Board::handleMoveForFullAnalysis(const std::shared_ptr<Move> & move) {
+    MAINLOG("Handling move for full analysis " << move->algebraicFormat())
     _handleMove(move);
     _calculateHasLegalMove();
     _calculateLegalMoves();
 }
 
 void Board::handleMoveForSingleAnalysis(const std::shared_ptr<Move> & move) {
+    MAINLOG("Handling move for single analysis " << move->algebraicFormat())
     _handleMove(move);
     _calculateHasLegalMove();
 }
 
 void Board::_handleMove(const std::shared_ptr<Move> & move) {
-    MAINLOG("Handling move " << move->algebraicFormat())
     Position startPos = move->source();
     Position endPos = move->target();
     int startIndex = Position::internalToIndex(startPos);
@@ -321,7 +324,7 @@ void Board::_handleMove(const std::shared_ptr<Move> & move) {
         }
         _pieces[endIndex] = Pieces::Piece::createPiece(move->promotionResult(), movedPiece->color(), endPos.col, endPos.row, shared_from_this());
         _gameHistory.addPromotedPawn(_pieces[startIndex]);
-        _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[startIndex] = Pieces::Piece::GetBlankPiece();
     }
     else if (move->isCastle()) {
         Position rookStartPos(0, 0);
@@ -352,11 +355,11 @@ void Board::_handleMove(const std::shared_ptr<Move> & move) {
         }
         // King
         _pieces[Position::internalToIndex(endPos)] = _pieces[Position::internalToIndex(startPos)];
-        _pieces[Position::internalToIndex(startPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[Position::internalToIndex(startPos)] = Pieces::Piece::GetBlankPiece();
         _pieces[Position::internalToIndex(endPos)]->setPosition(endPos.col, endPos.row);
         // Rook
         _pieces[Position::internalToIndex(rookEndPos)] = _pieces[Position::internalToIndex(rookStartPos)];
-        _pieces[Position::internalToIndex(rookStartPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[Position::internalToIndex(rookStartPos)] = Pieces::Piece::GetBlankPiece();
         _pieces[Position::internalToIndex(rookEndPos)]->setPosition(rookEndPos.col, rookEndPos.row);
     }
     else {
@@ -367,19 +370,19 @@ void Board::_handleMove(const std::shared_ptr<Move> & move) {
             if (move->color() == Color::WHITE) {
                 Position enPassantPawnActualPos(_enPassantTarget.col, _enPassantTarget.row - 1);
                 _gameHistory.addCapturedPiece(_pieces[Position::internalToIndex(enPassantPawnActualPos)]);
-                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::GetBlankPiece();
             }
             else {
                 Position enPassantPawnActualPos(_enPassantTarget.col, _enPassantTarget.row + 1);
                 _gameHistory.addCapturedPiece(_pieces[Position::internalToIndex(enPassantPawnActualPos)]);
-                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+                _pieces[Position::internalToIndex(enPassantPawnActualPos)] = Pieces::Piece::GetBlankPiece();
             }
         }
         else {
         }
         _pieces[endIndex] = _pieces[startIndex];
         _pieces[endIndex]->setPosition(endPos.col, endPos.row);
-        _pieces[startIndex] = Pieces::Piece::createPiece(PieceType::BLANK, Color::WHITE, startPos.col, startPos.row, shared_from_this());
+        _pieces[startIndex] = Pieces::Piece::GetBlankPiece();
     }
 
     _isCheck = _scanForCheck();
@@ -387,18 +390,20 @@ void Board::_handleMove(const std::shared_ptr<Move> & move) {
     _calculateFen();
     _doubleCheckFen();
 
-    MAINLOG("About to save FEN: " << _fen)
+    MAINLOG("FEN: " << _fen)
 
     _gameHistory.addMove(move, _fen);
 }
 
 void Board::undoFullAnalysisMove(const std::shared_ptr<Move> & move) {
+    MAINLOG("Undoing full analysis move " << move->algebraicFormat())
     _undoMove(move);
     _calculateHasLegalMove();
     _calculateLegalMoves();
 }
 
 void Board::undoSingleAnalysisMove(const std::shared_ptr<Move> & move) {
+    MAINLOG("Undoing single analysis move " << move->algebraicFormat())
     _undoMove(move);
     _calculateHasLegalMove();
 }
@@ -434,9 +439,8 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
         }
     }
     else {
-        lastCapturedPiece = Piece::createPiece(PieceType::BLANK, Color::WHITE, 0, 0, shared_from_this());
+        lastCapturedPiece = Pieces::Piece::GetBlankPiece();
     }
-
     std::shared_ptr<Piece> lastPromotedPawn;
     if (lastMove->isPromotion()) {
         if (!_gameHistory.lastPromotedPawn(lastPromotedPawn)) {
@@ -445,7 +449,7 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
         }
     }
     else {
-        lastPromotedPawn = Piece::createPiece(PieceType::BLANK, Color::WHITE, 0, 0, shared_from_this());
+        lastPromotedPawn = Pieces::Piece::GetBlankPiece();
     }
 
     _gameHistory.undoLastMove();
@@ -478,7 +482,7 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
             _pieces[endIndex] = lastCapturedPiece;
         }
         else {
-            _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+            _pieces[endIndex] = Pieces::Piece::GetBlankPiece();
         }
     }
     else if (lastMove->isCastle()) {
@@ -490,17 +494,17 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
                 _pieces[Position::internalToIndex(Position(7, 0))]->setPosition(7, 0);
                 _pieces[Position::internalToIndex(Position(4, 0))] = _pieces[Position::internalToIndex(Position(6, 0))];
                 _pieces[Position::internalToIndex(Position(4, 0))]->setPosition(4, 0);
-                _pieces[Position::internalToIndex(Position(5, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 5, 0, shared_from_this());
-                _pieces[Position::internalToIndex(Position(6, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 6, 0, shared_from_this());
+                _pieces[Position::internalToIndex(Position(5, 0))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(6, 0))] = Pieces::Piece::GetBlankPiece();
             }
             else {
                 _pieces[Position::internalToIndex(Position(0, 0))] = _pieces[Position::internalToIndex(Position(3, 0))];
                 _pieces[Position::internalToIndex(Position(0, 0))]->setPosition(0, 0);
                 _pieces[Position::internalToIndex(Position(4, 0))] = _pieces[Position::internalToIndex(Position(2, 0))];
                 _pieces[Position::internalToIndex(Position(4, 0))]->setPosition(4, 0);
-                _pieces[Position::internalToIndex(Position(1, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 1, 0, shared_from_this());
-                _pieces[Position::internalToIndex(Position(2, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 2, 0, shared_from_this());
-                _pieces[Position::internalToIndex(Position(3, 0))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 3, 0, shared_from_this());
+                _pieces[Position::internalToIndex(Position(1, 0))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(2, 0))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(3, 0))] = Pieces::Piece::GetBlankPiece();
             }
         }
         else {
@@ -509,17 +513,17 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
                 _pieces[Position::internalToIndex(Position(7, 7))]->setPosition(7, 7);
                 _pieces[Position::internalToIndex(Position(4, 7))] = _pieces[Position::internalToIndex(Position(6, 7))];
                 _pieces[Position::internalToIndex(Position(4, 7))]->setPosition(4, 7);
-                _pieces[Position::internalToIndex(Position(5, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 5, 7, shared_from_this());
-                _pieces[Position::internalToIndex(Position(6, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 6, 7, shared_from_this());
+                _pieces[Position::internalToIndex(Position(5, 7))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(6, 7))] = Pieces::Piece::GetBlankPiece();
             }
             else {
                 _pieces[Position::internalToIndex(Position(0, 7))] = _pieces[Position::internalToIndex(Position(3, 7))];
                 _pieces[Position::internalToIndex(Position(0, 7))]->setPosition(0, 7);
                 _pieces[Position::internalToIndex(Position(4, 7))] = _pieces[Position::internalToIndex(Position(2, 7))];
                 _pieces[Position::internalToIndex(Position(4, 7))]->setPosition(4, 7);
-                _pieces[Position::internalToIndex(Position(1, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 1, 7, shared_from_this());
-                _pieces[Position::internalToIndex(Position(2, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 2, 7, shared_from_this());
-                _pieces[Position::internalToIndex(Position(3, 7))] = Piece::createPiece(PieceType::BLANK, Color::WHITE, 3, 7, shared_from_this());
+                _pieces[Position::internalToIndex(Position(1, 7))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(2, 7))] = Pieces::Piece::GetBlankPiece();
+                _pieces[Position::internalToIndex(Position(3, 7))] = Pieces::Piece::GetBlankPiece();
             }
         }
         if (lastMove->color() == Color::WHITE) {
@@ -545,12 +549,12 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
             Position locationOfCapturedPawn(endPos.col, endPos.row + 1);
             _pieces[Position::internalToIndex(locationOfCapturedPawn)] = lastCapturedPiece;
         }
-        _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+        _pieces[endIndex] = Pieces::Piece::GetBlankPiece();
     }
     else {
         _pieces[startIndex] = _pieces[endIndex];
         _pieces[startIndex]->setPosition(startPos.col, startPos.row);
-        _pieces[endIndex] = Piece::createPiece(PieceType::BLANK, Color::WHITE, endPos.col, endPos.row, shared_from_this());
+        _pieces[endIndex] = Pieces::Piece::GetBlankPiece();
     }
 
     if (lastMove->enabledEnPassant()) {
@@ -613,6 +617,8 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
     }
 
     _isCheck = _scanForCheck();
+
+    MAINLOG("FEN: " << _fen)
 }
 
 bool Board::_scanForCheck(bool otherPlayer) {
@@ -737,6 +743,7 @@ bool Board::testMoveForLegality(const std::shared_ptr<Move> move) {
         // Cannot capture a king!
         return false;
     }
+    MAINLOG("Handling move for legality test " << move->algebraicFormat())
     _handleMove(move);
     bool result = !_scanForCheck(true); // Check if the player that just moved is in check, which would make the move illegal.
     _undoMove(move);
@@ -754,6 +761,12 @@ void Board::_calculateLegalMoves() {
         piece->getPossibleMoves(pieceMoves);
         _legalMoves.insert(_legalMoves.end(), pieceMoves.begin(), pieceMoves.end());
     }
+
+    MAINLOG_NNL("List of legal response moves (" << _legalMoves.size() << "):")
+    for (const auto & move : _legalMoves) {
+        MAINLOG_NNL(" " << move->algebraicFormat())
+    }
+    MAINLOG("")
 }
 
 void Board::_calculateHasLegalMove() {

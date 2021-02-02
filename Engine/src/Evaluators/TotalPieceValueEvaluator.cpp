@@ -2,6 +2,7 @@
 #include <map>
 #include <cmath>
 #include <chrono>
+#include <sstream>
 #include "Engine/Evaluators/TotalPieceValueEvaluator.h"
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
@@ -16,7 +17,8 @@ namespace Evaluators {
 using Gameplay::Board;
 using Gameplay::Move;
 
-std::shared_ptr<Move> TotalPieceValueEvaluator::getBestMove() {
+void TotalPieceValueEvaluator::calculateBestMove() {
+    _isDone = false;
     _currentLine.clear();
     _totalHandle1Time = 0;
     _totalHandle2Time = 0;
@@ -40,12 +42,21 @@ std::shared_ptr<Move> TotalPieceValueEvaluator::getBestMove() {
     RECURSIONLOG("_totalUndo2Time " << _totalUndo2Time)
     RECURSIONLOG("_totalUndo3Time " << _totalUndo3Time)
     RECURSIONLOG("_totalTime " << _totalTime)
+    MAINLOG("_totalHandle1Time " << _totalHandle1Time)
+    MAINLOG("_totalHandle2Time " << _totalHandle2Time)
+    MAINLOG("_totalHandle3Time " << _totalHandle3Time)
+    MAINLOG("_totalUndo1Time " << _totalUndo1Time)
+    MAINLOG("_totalUndo2Time " << _totalUndo2Time)
+    MAINLOG("_totalUndo3Time " << _totalUndo3Time)
+    MAINLOG("_totalTime " << _totalTime)
 
     auto moves = _board->getLegalMoves();
     for (size_t i = 0; i < moves.size(); ++i) {
         if (result.second->uciFormat().compare(moves[i]->uciFormat()) == 0) {
             MAINLOG("Best move is " << result.second->algebraicFormat() << " with an evaluation of " << result.first)
-            return moves[i];
+            _calculatedMove = moves[i];
+            _isDone = true;
+            return;
         }
     }
     MAINLOG("The evaluation result " << result.second->algebraicFormat() << " did not match any of the possible moves")
@@ -54,9 +65,9 @@ std::shared_ptr<Move> TotalPieceValueEvaluator::getBestMove() {
 
 std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(int numPliesLeft) {
 
-    std::string logPrefix;
+    std::stringstream logPrefix;
     for (size_t i = 0; i < RECURSION_LEVEL - numPliesLeft; ++i) {
-        logPrefix += "    ";
+        logPrefix << "    ";
     }
 
     auto possibleMoves = _board->getLegalMoves();
@@ -68,7 +79,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
 
     if (numPliesLeft == 0) {
         std::shared_ptr<Move> bestMove;
-        for (auto move : possibleMoves) {
+        for (auto & move : possibleMoves) {
 
             auto t1 = std::chrono::high_resolution_clock::now();
             _board->handleMoveForSingleAnalysis(move);
@@ -98,7 +109,8 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             }
         }
 
-        RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMove->color()) << " Single evaluation for white -- Move: " << bestMove->algebraicFormat() << " Eval: " << bestEval)
+        RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMove->color()) << " Single evaluation for white -- Move: " << bestMove->algebraicFormat() << " Eval: " << bestEval)
+        MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMove->color()) << " Single evaluation for white -- Move: " << bestMove->algebraicFormat() << " Eval: " << bestEval)
 
         return std::make_pair(bestEval, bestMove);
     }
@@ -107,7 +119,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
         // for best NUM_POSSIBLE_MOVES:
         std::multimap<float, std::shared_ptr<Move>> orderedMoves;
         std::map<std::string, float> moveAPrioriEvals;
-        for (auto move : possibleMoves) {
+        for (auto & move : possibleMoves) {
 
             auto t1 = std::chrono::high_resolution_clock::now();
             _board->handleMoveForSingleAnalysis(move);
@@ -143,10 +155,12 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             }
 
             if (!bestMoves.empty()) {
-                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[0]->color()) << " Out of " << orderedMoves.size() << " candidate moves, selected " << bestMoves.size())
+                RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[0]->color()) << " Out of " << orderedMoves.size() << " candidate moves, selected " << bestMoves.size())
+                MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[0]->color()) << " Out of " << orderedMoves.size() << " candidate moves, selected " << bestMoves.size())
             }
             else if (!orderedMoves.empty()) {
-                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Failed to select any candidate moves")
+                RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Failed to select any candidate moves")
+                MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Failed to select any candidate moves")
             }
             else {
                 if (_board->isCheck()) {
@@ -162,7 +176,8 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
                     // Stalemate
                     return std::make_pair(0.0, nullptr);
                 }
-                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " No candidate moves")
+                RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " No candidate moves")
+                MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " No candidate moves")
             }
             
     //        MAINLOG("Level: " << (RECURSION_LEVEL - numPliesLeft))
@@ -177,7 +192,8 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
     //        MAINLOG("")
 
             for (int i = 0; i < bestMoves.size(); ++i) {
-                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
+                RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
+                MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
 
                 auto t1 = std::chrono::high_resolution_clock::now();
                 _board->handleMoveForFullAnalysis(bestMoves[i]);
@@ -196,9 +212,10 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
 
                 _currentLine.pop_back();
                 evaluatedBestMoves.insert(std::make_pair(moveEval, bestMoves[i]));
-                RECURSIONLOG(logPrefix << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
+                RECURSIONLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
+                MAINLOG(logPrefix.str() << "Level: " << (RECURSION_LEVEL - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
             }
-            for (auto move : bestMoves) {
+            for (auto & move : bestMoves) {
                 alreadyTestedMoves.push_back(move);
             }
             bool needMoreMoves = false;
@@ -253,7 +270,7 @@ std::pair<float, std::shared_ptr<Move>> TotalPieceValueEvaluator::_calcBestEval(
             if (RECURSION_LEVEL - numPliesLeft == 0 && needMoreMoves && alreadyTestedMoves.size() < orderedMoves.size()) {
                 continue;
             }
-            if (RECURSION_LEVEL - numPliesLeft == 0) { RECURSIONLOG("Returning move " << result.second->algebraicFormat() << " with eval " << result.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves") }
+            if (RECURSION_LEVEL - numPliesLeft == 0) { RECURSIONLOG("Returning move " << result.second->algebraicFormat() << " with eval " << result.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves") MAINLOG("Returning move " << result.second->algebraicFormat() << " with eval " << result.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves") }
             return result;
         }
     }
@@ -266,7 +283,7 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int level, int numMove
     int numMovesStillNeeded = numMoves;
     float prevVal = 0.0;
     bool addedOneToStagingArea = false;
-    for (auto iter = start; iter != end; ++iter) {
+    for (auto & iter = start; iter != end; ++iter) {
         bool alreadyTested = false;
         if (level == 0) {
             for (auto testedMove : testedMoves) {
@@ -337,7 +354,7 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int level, int numMove
     int numMovesStillNeeded = numMoves;
     float prevVal = 0.0;
     bool addedOneToStagingArea = false;
-    for (auto iter = start; iter != end; ++iter) {
+    for (auto & iter = start; iter != end; ++iter) {
         bool alreadyTested = false;
         if (level == 0) {
             for (auto testedMove : testedMoves) {
@@ -396,7 +413,7 @@ void TotalPieceValueEvaluator::_getBestMovesFromSortedMap(int level, int numMove
 float TotalPieceValueEvaluator::_evaluateMoveSingle() {
     float eval = 0.0;
     auto pieces = _board->pieces();
-    for (auto piece : pieces) {
+    for (auto & piece : pieces) {
         float factor = (piece->color() == Color::WHITE ? 1.0 : -1.0);
         if (piece->pieceType() == PieceType::BLANK) {
             continue;

@@ -14,7 +14,7 @@ class RandomEvaluator : public Evaluator {
 public:
     RandomEvaluator() : Evaluator() { }
 
-    virtual std::shared_ptr<Sascha::Gameplay::Move> getBestMove() override;
+    virtual void calculateBestMove() override;
 
 };
     

@@ -11,6 +11,7 @@ using Pieces::Piece;
 
 class Player {
 public:
+    Player() : _hasCastled(false), _castlingRightsKingSide(true), _castlingRightsQueenSide(true), _isComputer(false), _isOponent(false) { }
     void addPiece(Piece & piece);
     void setCastlingRightsKingSide(bool val) { _castlingRightsKingSide = val; }
     void setCastlingRightsQueenSide(bool val) { _castlingRightsQueenSide = val; }

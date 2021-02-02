@@ -17,19 +17,45 @@ using namespace Sascha::IO::Messages;
 using Sascha::Gameplay::Board;
 using Sascha::Gameplay::Move;
 
-Engine::Engine(Sascha::IO::MessageQueue & incomingMessages, Sascha::IO::MessageQueue & outgoingMessages) : _incomingMessages(incomingMessages), _outgoingMessages(outgoingMessages), _isDone(false) {
+Engine::Engine(Sascha::IO::MessageQueue & incomingMessages, Sascha::IO::MessageQueue & outgoingMessages) :
+        _incomingMessages(incomingMessages), _outgoingMessages(outgoingMessages), _isDone(false), _evaluatorRunning(false), _startEvaluatorFlag(false) {
     _evaluator = Evaluators::Evaluator::createEvaluator();
 }
 
 void Engine::start() {
+    std::thread evaluatorThread;
     srand (time(NULL));
     while (true) {
+//        MAINLOG("Engine start loop")
         if (_isDone) {
             MAINLOG("Engine killing loop")
             break;
         }
 
         _handleInputQueue();
+
+        if (_evaluatorRunning) {
+            if (_evaluator->isDone()) {
+                _evaluatorRunning = false;
+                evaluatorThread.join();
+
+                auto bestMove = _evaluator->calculatedMove();
+                try {
+                auto bestMoveMessage = std::static_pointer_cast<BestMoveMessage>(Message::createMessage(MessageType::BESTMOVE));
+                bestMoveMessage->setMove1(bestMove->uciFormat());
+                _outgoingMessages.addMessage(bestMoveMessage);
+                }
+                catch (std::runtime_error&) {
+                }
+                MAINLOG("Outgoing message queue has " << _outgoingMessages.size() << " messages")
+            }
+        }
+
+        if (_startEvaluatorFlag) {
+            _startEvaluatorFlag = false;
+            _evaluatorRunning = true;
+            evaluatorThread = std::thread(Evaluators::Evaluator::calculateBestMove, _evaluator);
+        }
 
         std::this_thread::sleep_for(100ms);
     }
@@ -84,11 +110,8 @@ void Engine::_handleInputQueue() {
         if (message->messageType() == MessageType::GO) {
             MAINLOG("Handling go")
             _evaluator->setBoard(_board);
-            auto bestMove = _evaluator->getBestMove();
-            MAINLOG("Selected best move " << bestMove->algebraicFormat())
-            auto bestMoveMessage = std::make_shared<BestMoveMessage>();
-            bestMoveMessage->setMove1(bestMove->uciFormat());
-            _outgoingMessages.addMessage(bestMoveMessage);
+            _startEvaluatorFlag = true;
+            //std::thread evaluatorThread(Sascha::Engine::Evaluators::Evaluator::calculateBestMove, _evaluator);
         }
 
         if (message->messageType() == MessageType::QUIT) {

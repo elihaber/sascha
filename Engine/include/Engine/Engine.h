@@ -28,7 +28,9 @@ private:
     Sascha::Gameplay::Player _whitePlayer;
     Sascha::Gameplay::Player _blackPlayer;
     std::shared_ptr<Evaluators::Evaluator> _evaluator;
-
+    //std::thread _evaluatorThread;
+    bool _evaluatorRunning;
+    bool _startEvaluatorFlag;
 };
 
 }

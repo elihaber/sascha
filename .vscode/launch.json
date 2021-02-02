@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\out\\sascha.exe",
+            "program": "${workspaceFolder}\\bin\\sascha_d.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

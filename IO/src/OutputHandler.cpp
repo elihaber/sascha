@@ -28,6 +28,8 @@ void OutputHandler::start(std::future<void> futureObj) {
             std::stringstream line;
             if (message->formatMessage(line)) {
                 OUTPUTLOG("out << " << line.str())
+                MAINLOG("out << " << line.str())
+                MAINLOG("Outgo1ng message queue has " << _outgoingMessages.size() << " messages")
                 std::cout << line.str() << std::endl;
             }
             else {
@@ -37,6 +39,8 @@ void OutputHandler::start(std::future<void> futureObj) {
 
         std::this_thread::sleep_for(100ms);
     }
+    OUTPUTLOG("Output loop has exited")
+    MAINLOG("Output loop has exited")
 }
 
 void OutputHandler::end() {
