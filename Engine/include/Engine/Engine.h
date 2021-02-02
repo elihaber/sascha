@@ -11,6 +11,8 @@ namespace Engine {
 
 namespace Evaluators { class Evaluator; }
 
+class Options;
+
 class Engine {
 
 public:
@@ -31,6 +33,7 @@ private:
     //std::thread _evaluatorThread;
     bool _evaluatorRunning;
     bool _startEvaluatorFlag;
+    std::shared_ptr<Options> _options;
 };
 
 }

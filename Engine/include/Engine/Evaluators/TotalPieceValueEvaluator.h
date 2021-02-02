@@ -8,11 +8,12 @@
 namespace Sascha {
 namespace Gameplay { class Board; class Move; }
 namespace Engine {
+    class Options;
 namespace Evaluators {
 
 class TotalPieceValueEvaluator : public Evaluator {
 public:
-    TotalPieceValueEvaluator() : Evaluator() { }
+    TotalPieceValueEvaluator(std::shared_ptr<Sascha::Engine::Options> options) : Evaluator(options) { }
 
     virtual void calculateBestMove() override;
 
@@ -32,6 +33,8 @@ private:
     long _totalUndo2Time;
     long _totalUndo3Time;
     long _totalTime;
+    int _searchDepth;
+    int _initialMoveCount;
 };
     
 }

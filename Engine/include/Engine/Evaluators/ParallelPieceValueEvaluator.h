@@ -8,11 +8,12 @@
 namespace Sascha {
 namespace Gameplay { class Board; class Move; }
 namespace Engine {
+    class Options;
 namespace Evaluators {
 
 class ParallelPieceValueEvaluator : public Evaluator {
 public:
-    ParallelPieceValueEvaluator() : Evaluator() { }
+    ParallelPieceValueEvaluator(std::shared_ptr<Sascha::Engine::Options> options) : Evaluator(options) { }
 
     virtual void calculateBestMove() override;
 

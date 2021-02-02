@@ -8,6 +8,8 @@ enum class PieceType { BLANK, PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING };
 
 enum class CastleSide { NONE, QUEENSIDE, KINGSIDE, BOTH };
 
+enum class Algorithm { NONE, RANDOM, MINIMAX };
+
 static Color oppositeColor(Color color) { return (color == Color::WHITE) ? Color::BLACK : Color::WHITE; }
 
 static std::string colorToString(Color color) { return (color == Color::WHITE) ? "WHITE" : "BLACK"; }
