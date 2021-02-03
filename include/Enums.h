@@ -18,4 +18,6 @@ static CastleSide intToCastleSide(int val) { if (val < 0 || val > 1) throw std::
 
 enum class Algorithm { NONE, RANDOM, MINIMAX };
 
+enum class MinOrMax { MIN, MAX };
+
 }

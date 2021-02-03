@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include "Evaluator.h"
 
 namespace Sascha {
@@ -11,6 +12,11 @@ namespace Engine {
     class Options;
 namespace Evaluators {
 
+typedef std::vector<std::shared_ptr<Sascha::Gameplay::Move>> MoveVector;
+typedef std::pair<float, std::shared_ptr<Sascha::Gameplay::Move>> EvalMovePair;
+typedef std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> OrderedEvalMoveMap;
+typedef std::unordered_map<std::string, float> UnorderedMoveEvalMap;
+
 class TotalPieceValueEvaluator : public Evaluator {
 public:
     TotalPieceValueEvaluator(std::shared_ptr<Sascha::Engine::Options> options) : Evaluator(options) { }
@@ -18,11 +24,14 @@ public:
     virtual void calculateBestMove() override;
 
 private:
-    std::pair<float, std::shared_ptr<Gameplay::Move>>  _calcBestEval(int numPliesLeft);
+    EvalMovePair _calcBestEval(int numPliesLeft);
     float _evaluateMoveSingle();
-    void _getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
-    void _getBestMovesFromSortedMap(int level, int numMoves, const std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> & orderedMoves, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator start, std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>>::reverse_iterator end, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & testedMoves, std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & bestMoves);
     bool _compareFloat(float x, float y, float epsilon = 0.001f);
+
+    EvalMovePair _handleEndNode(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves);
+    void _evaluateMoves(const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals);
+    void _selectNextBatchOfBestMoves(const OrderedEvalMoveMap & orderedMoves, const MoveVector & excludeMoves, MoveVector & selectedMoves);
+    bool _getBestEvaluatedMove(const OrderedEvalMoveMap & evaluatedMoves, bool isLevel0, EvalMovePair & bestEvaluatedMove);
 
     float _currEval;
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> _currentLine;
