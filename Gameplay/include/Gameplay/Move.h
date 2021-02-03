@@ -31,14 +31,14 @@ public:
     CastleSide castleSide() const { return _castleSide; }
     std::string uciFormat() const { return _uciFormat; }
     std::string algebraicFormat() const { return _algebraicFormat; }
-    CastleSide ruinedCastling() const { return _ruinedCastling; }
+    bool ruinedCastling(int index) const { return _ruinedCastling[index]; }
     bool ruinedEnPassant() const { return _ruinedEnPassant; }
     Position ruinedEnPassantTarget() const { return _ruinedEnPassantTarget; }
     bool enabledEnPassant() const { return _enabledEnPassant; }
     Position enabledEnPassantTarget() const { return _enabledEnPassantTarget; }
 
     void setPromotionResult(PieceType val);
-    void setRuinedCastling(CastleSide val) { _ruinedCastling = val; }
+    void setRuinedCastling(CastleSide castleSide, bool val) { _ruinedCastling[castleSideToInt(castleSide)] = val; }
 
     bool operator ==(const Move & other) const {
         return (_source == other.source() && _target == other.target());
@@ -68,7 +68,7 @@ private:
     CastleSide _castleSide;
     std::string _uciFormat;
     std::string _algebraicFormat;
-    CastleSide _ruinedCastling;
+    bool _ruinedCastling[2];
     bool _isEnPassant;
     bool _ruinedEnPassant;
     Position _ruinedEnPassantTarget;

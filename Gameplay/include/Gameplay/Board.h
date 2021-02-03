@@ -4,17 +4,18 @@
 #include <string>
 #include "Enums.h"
 #include "Gameplay/Pieces/Piece.h"
-#include "Gameplay/Player.h"
 #include "Gameplay/GameHistory.h"
 
 namespace Sascha {
 namespace Gameplay {
 
+namespace Pieces { class Piece; }
 class Move;
+class Position;
 
 class Board : public std::enable_shared_from_this<Board> {
 public:
-    Board(Player & whitePlayer, Player & blackPlayer) : _whitePlayer(whitePlayer), _blackPlayer(blackPlayer) { }
+    Board() { }
 
     /**
      * Prepares the board for a new game, with white to move.
@@ -60,16 +61,16 @@ public:
     bool testMoveForLegality(const std::shared_ptr<Move> move);
     bool hasEnPassantTarget() const { return _hasEnPassantTarget; }
     bool enPassantTarget(Position & position) const { position = _enPassantTarget; return _hasEnPassantTarget; }
-    std::shared_ptr<Piece> pieceAt(const Position & position) const;
-    std::vector<std::shared_ptr<Piece>> getAllAttackerOfTypeOnSquare(PieceType pieceType, Color color, Position target);
-    Player & whitePlayer() const { return _whitePlayer; }
-    Player & blackPlayer() const { return _blackPlayer; }
+    std::shared_ptr<Pieces::Piece> pieceAt(const Position & position) const;
+    std::vector<std::shared_ptr<Pieces::Piece>> getAllAttackerOfTypeOnSquare(PieceType pieceType, Color color, Position target);
     std::vector<std::shared_ptr<Pieces::Piece>> pieces() { return _pieces; }
     bool isCheckmate();
     bool isStalemate();
     const std::vector<std::shared_ptr<Move>> & getLegalMoves() const;
     void _calculateLegalMoves();
     void _calculateHasLegalMove();
+    bool castlingRights(Color color, CastleSide castleSide) const { return _castlingRights[colorToInt(color) * 2 + castleSideToInt(castleSide)]; }
+    void setCastlingRights(Color color, CastleSide castleSide, bool val) { _castlingRights[colorToInt(color) * 2 + castleSideToInt(castleSide)] = val; }
 
 private:
     void _handleMove(const std::shared_ptr<Move> & move);
@@ -80,8 +81,6 @@ private:
 
     std::vector<std::shared_ptr<Pieces::Piece>> _pieces;
     Color _whosTurnToGo;
-    Player & _whitePlayer;
-    Player & _blackPlayer;
     bool _hasEnPassantTarget;
     Position _enPassantTarget;
     int _halfMoveClock;
@@ -91,6 +90,8 @@ private:
     GameHistory _gameHistory;
     std::vector<std::shared_ptr<Move>> _legalMoves;
     bool _hasLegalMove;
+    bool _castlingRights[4]; // Do not access this member -- use the getter/setter, even in this class
+    bool _castled[2]; // Do not access this member -- use the getter/setter, even in this class
 
     // Previous board state
     int _prevHalfmoveClock;

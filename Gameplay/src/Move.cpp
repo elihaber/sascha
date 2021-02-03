@@ -5,7 +5,7 @@ namespace Sascha {
 namespace Gameplay {
 
 Move::Move(const Position & source, const Position & target, const std::shared_ptr<Board> & board) : 
-        _board(board), _source(source), _target(target), _promotionResult(PieceType::BLANK), _ruinedCastling(CastleSide::NONE), _ruinedEnPassant(false), _enabledEnPassant(false)  {
+        _board(board), _source(source), _target(target), _promotionResult(PieceType::BLANK), _ruinedEnPassant(false), _enabledEnPassant(false)  {
     _calculateUciFormat();
     _findColor();
     _findPieceType();
@@ -15,7 +15,7 @@ Move::Move(const Position & source, const Position & target, const std::shared_p
     _calculateIsEnPassant();
     _calculateAlgebraicFormat();
 }
-Move::Move(const std::string & uciFormat, const std::shared_ptr<Board> & board) : _board(board), _uciFormat(uciFormat), _ruinedCastling(CastleSide::NONE), _ruinedEnPassant(false), _enabledEnPassant(false) {
+Move::Move(const std::string & uciFormat, const std::shared_ptr<Board> & board) : _board(board), _uciFormat(uciFormat), _ruinedEnPassant(false), _enabledEnPassant(false) {
     _calculateInternalValues();
     _findColor();
     _findPieceType();

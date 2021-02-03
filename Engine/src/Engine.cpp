@@ -197,7 +197,7 @@ void Engine::_handleInputQueue() {
 
         if (message->messageType() == MessageType::POSITION) {
             std::shared_ptr<PositionMessage> realMessage = std::static_pointer_cast<PositionMessage>(message);
-            _board = std::make_shared<Board>(_whitePlayer, _blackPlayer);
+            _board = std::make_shared<Board>();
             if (realMessage->startposFlag()) {
                 _board->setUpStartingPosition();
             }

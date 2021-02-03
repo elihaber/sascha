@@ -38,28 +38,15 @@ void King::getPossibleMoves(std::vector<std::shared_ptr<Move>> & possibleMoves) 
         potentialTargets.push_back(Position(_position.col - 1, _position.row));
     }
 
-    if (_color == Color::WHITE) {
-        if (_board->whitePlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 0)) && !_board->isSquareAttacked(Position(5, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 0)) && !_board->isSquareAttacked(Position(6, 0), oppositeColor(_color))) {
-                potentialTargets.push_back(Position(6, 0));
-            }
-        }
-        if (_board->whitePlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 0)) && !_board->isSquareAttacked(Position(3, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 0)) && !_board->isSquareAttacked(Position(2, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 0))) {
-                potentialTargets.push_back(Position(2, 0));
-            }
+    int baseRow = (_color == Color::WHITE ? 0 : 7);
+    if (_board->castlingRights(_color, CastleSide::KINGSIDE)) {
+        if (!_board->isCheck() && _board->isSquareEmpty(Position(5, baseRow)) && !_board->isSquareAttacked(Position(5, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, baseRow)) && !_board->isSquareAttacked(Position(6, baseRow), oppositeColor(_color))) {
+            potentialTargets.push_back(Position(6, baseRow));
         }
     }
-    else {
-        if (_board->blackPlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 7)) && !_board->isSquareAttacked(Position(5, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 7)) && !_board->isSquareAttacked(Position(6, 7), oppositeColor(_color))) {
-                potentialTargets.push_back(Position(6, 7));
-            }
-        }
-        if (_board->blackPlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 7)) && !_board->isSquareAttacked(Position(3, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 7)) && !_board->isSquareAttacked(Position(2, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 7))) {
-                potentialTargets.push_back(Position(2, 7));
-            }
+    if (_board->castlingRights(_color, CastleSide::QUEENSIDE)) {
+        if (!_board->isCheck() && _board->isSquareEmpty(Position(3, baseRow)) && !_board->isSquareAttacked(Position(3, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, baseRow)) && !_board->isSquareAttacked(Position(2, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, baseRow))) {
+            potentialTargets.push_back(Position(2, baseRow));
         }
     }
 
@@ -124,35 +111,18 @@ bool King::calculateHasLegalMove() const {
         }
     }
 
-    if (_color == Color::WHITE) {
-        if (_board->whitePlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 0)) && !_board->isSquareAttacked(Position(5, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 0)) && !_board->isSquareAttacked(Position(6, 0), oppositeColor(_color))) {
-                if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(6, 0), _board))) {
-                    return true;
-                }
-            }
-        }
-        if (_board->whitePlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 0)) && !_board->isSquareAttacked(Position(3, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 0)) && !_board->isSquareAttacked(Position(2, 0), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 0))) {
-                if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(2, 0), _board))) {
-                    return true;
-                }
+    int baseRow = (_color == Color::WHITE ? 0 : 7);
+    if (_board->castlingRights(_color, CastleSide::KINGSIDE)) {
+        if (!_board->isCheck() && _board->isSquareEmpty(Position(5, baseRow)) && !_board->isSquareAttacked(Position(5, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, baseRow)) && !_board->isSquareAttacked(Position(6, baseRow), oppositeColor(_color))) {
+            if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(6, baseRow), _board))) {
+                return true;
             }
         }
     }
-    else {
-        if (_board->blackPlayer().hasCastlingRightsKingSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(5, 7)) && !_board->isSquareAttacked(Position(5, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(6, 7)) && !_board->isSquareAttacked(Position(6, 7), oppositeColor(_color))) {
-                if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(6, 7), _board))) {
-                    return true;
-                }
-            }
-        }
-        if (_board->blackPlayer().hasCastlingRightsQueenSide()) {
-            if (!_board->isCheck() && _board->isSquareEmpty(Position(3, 7)) && !_board->isSquareAttacked(Position(3, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, 7)) && !_board->isSquareAttacked(Position(2, 7), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, 7))) {
-                if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(2, 7), _board))) {
-                    return true;
-                }
+    if (_board->castlingRights(_color, CastleSide::QUEENSIDE)) {
+        if (!_board->isCheck() && _board->isSquareEmpty(Position(3, baseRow)) && !_board->isSquareAttacked(Position(3, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(2, baseRow)) && !_board->isSquareAttacked(Position(2, baseRow), oppositeColor(_color)) && _board->isSquareEmpty(Position(1, baseRow))) {
+            if (_board->testMoveForLegality(std::make_shared<Move>(_position, Position(2, baseRow), _board))) {
+                return true;
             }
         }
     }

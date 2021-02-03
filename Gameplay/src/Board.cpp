@@ -7,6 +7,7 @@
 #include "Gameplay/Position.h"
 
 using Sascha::Gameplay::Pieces::BlankPiece;
+using Sascha::Gameplay::Pieces::Piece;
 
 namespace Sascha {
 namespace Gameplay {
@@ -106,25 +107,26 @@ void Board::setUpFromFen(const std::string & fen) {
         currChar = fen[++pos];
     }
 
-    _whitePlayer.setCastlingRightsKingSide(false);
-    _whitePlayer.setCastlingRightsQueenSide(false);
-    _blackPlayer.setCastlingRightsKingSide(false);
-    _blackPlayer.setCastlingRightsQueenSide(false);
+    setCastlingRights(Color::WHITE, CastleSide::KINGSIDE, false);
+    setCastlingRights(Color::WHITE, CastleSide::QUEENSIDE, false);
+    setCastlingRights(Color::BLACK, CastleSide::KINGSIDE, false);
+    setCastlingRights(Color::BLACK, CastleSide::QUEENSIDE, false);
+
     while (currChar != ' ') {
         if (currChar == '-') {
             // do nothing
         }
         else if (currChar == 'k') {
-            _blackPlayer.setCastlingRightsKingSide(true);
+            setCastlingRights(Color::BLACK, CastleSide::KINGSIDE, true);
         }
         else if (currChar == 'q') {
-            _blackPlayer.setCastlingRightsQueenSide(true);
+            setCastlingRights(Color::BLACK, CastleSide::QUEENSIDE, true);
         }
         else if (currChar == 'K') {
-            _whitePlayer.setCastlingRightsKingSide(true);
+            setCastlingRights(Color::WHITE, CastleSide::KINGSIDE, true);
         }
         else if (currChar == 'Q') {
-            _whitePlayer.setCastlingRightsQueenSide(true);
+            setCastlingRights(Color::WHITE, CastleSide::QUEENSIDE, true);
         }
         currChar = fen[++pos];
     }
@@ -133,7 +135,6 @@ void Board::setUpFromFen(const std::string & fen) {
         currChar = fen[++pos];
     }
 
-    //currChar = fen[++pos];
     if (currChar == '-') {
         _hasEnPassantTarget = false;
     }
@@ -193,87 +194,25 @@ void Board::_handleMove(const std::shared_ptr<Move> & move) {
 
     auto & movedPiece = _pieces[startIndex];
 
-    if (!move->isCastle()) {
-        if (move->pieceType() == PieceType::KING) {
-            if (movedPiece->color() == Color::WHITE) {
-                if (!_whitePlayer.hasCastled() && _whitePlayer.hasCastlingRightsKingSide() && _whitePlayer.hasCastlingRightsQueenSide()) {
-                    _whitePlayer.setCastlingRightsKingSide(false);
-                    _whitePlayer.setCastlingRightsQueenSide(false);
-                    move->setRuinedCastling(CastleSide::BOTH);
-                }
-                else if (!_whitePlayer.hasCastled() && _whitePlayer.hasCastlingRightsKingSide()) {
-                    _whitePlayer.setCastlingRightsKingSide(false);
-                    move->setRuinedCastling(CastleSide::KINGSIDE);
-                }
-                else if (!_whitePlayer.hasCastled() && _whitePlayer.hasCastlingRightsQueenSide()) {
-                    _whitePlayer.setCastlingRightsQueenSide(false);
-                    move->setRuinedCastling(CastleSide::QUEENSIDE);
-                }
-            }
-            if (movedPiece->color() == Color::BLACK) {
-                if (!_blackPlayer.hasCastled() && _blackPlayer.hasCastlingRightsKingSide() && _blackPlayer.hasCastlingRightsQueenSide()) {
-                    _blackPlayer.setCastlingRightsKingSide(false);
-                    _blackPlayer.setCastlingRightsQueenSide(false);
-                    move->setRuinedCastling(CastleSide::BOTH);
-                }
-                else if (!_blackPlayer.hasCastled() && _blackPlayer.hasCastlingRightsKingSide()) {
-                    _blackPlayer.setCastlingRightsKingSide(false);
-                    move->setRuinedCastling(CastleSide::KINGSIDE);
-                }
-                else if (!_blackPlayer.hasCastled() && _blackPlayer.hasCastlingRightsQueenSide()) {
-                    _blackPlayer.setCastlingRightsQueenSide(false);
-                    move->setRuinedCastling(CastleSide::QUEENSIDE);
-                }
-            }
-        }
-        else if (move->pieceType() == PieceType::ROOK) {
-            if (move->source() == Position(0, 0) && move->color() == Color::WHITE && _whitePlayer.hasCastlingRightsQueenSide() && !_whitePlayer.hasCastled()) {
-                _whitePlayer.setCastlingRightsQueenSide(false);
-                move->setRuinedCastling(CastleSide::QUEENSIDE);
-            }
-            else if (move->source() == Position(7, 0) && move->color() == Color::WHITE && _whitePlayer.hasCastlingRightsKingSide() && !_whitePlayer.hasCastled()) {
-                _whitePlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::KINGSIDE);
-            }
-            else if (move->source() == Position(0, 7) && move->color() == Color::BLACK && _blackPlayer.hasCastlingRightsQueenSide() && !_blackPlayer.hasCastled()) {
-                _blackPlayer.setCastlingRightsQueenSide(false);
-                move->setRuinedCastling(CastleSide::QUEENSIDE);
-            }
-            else if (move->source() == Position(7, 7) && move->color() == Color::BLACK && _blackPlayer.hasCastlingRightsKingSide() && !_blackPlayer.hasCastled()) {
-                _blackPlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::KINGSIDE);
+    move->setRuinedCastling(CastleSide::KINGSIDE, false);
+    move->setRuinedCastling(CastleSide::QUEENSIDE, false);
+
+    if (move->isCastle() || move->pieceType() == PieceType::KING) {
+        for (int i = 0; i < 2; ++i) {
+            int arrayPos = colorToInt(move->color()) * 2 + i;
+            if (castlingRights(move->color(), intToCastleSide(i))) {
+                setCastlingRights(move->color(), intToCastleSide(i), false);
+                move->setRuinedCastling(intToCastleSide(i), true);
             }
         }
     }
-    else {
-        if (move->color() == Color::WHITE) {
-            if (_whitePlayer.hasCastlingRightsQueenSide() && _whitePlayer.hasCastlingRightsKingSide()) {
-                _whitePlayer.setCastlingRightsQueenSide(false);
-                _whitePlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::BOTH);
-            }
-            else if (_whitePlayer.hasCastlingRightsQueenSide()) {
-                _whitePlayer.setCastlingRightsQueenSide(false);
-                move->setRuinedCastling(CastleSide::QUEENSIDE);
-            }
-            else if (_whitePlayer.hasCastlingRightsKingSide()) {
-                _whitePlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::KINGSIDE);
-            }
-        }
-        else {
-            if (_blackPlayer.hasCastlingRightsQueenSide() && _blackPlayer.hasCastlingRightsKingSide()) {
-                _blackPlayer.setCastlingRightsQueenSide(false);
-                _blackPlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::BOTH);
-            }
-            else if (_blackPlayer.hasCastlingRightsQueenSide()) {
-                _blackPlayer.setCastlingRightsQueenSide(false);
-                move->setRuinedCastling(CastleSide::QUEENSIDE);
-            }
-            else if (_blackPlayer.hasCastlingRightsKingSide()) {
-                _blackPlayer.setCastlingRightsKingSide(false);
-                move->setRuinedCastling(CastleSide::KINGSIDE);
+    else if (move->pieceType() == PieceType::ROOK) {
+        int baseRow = (move->color() == Color::WHITE ? 0 : 7);
+        if (move->source().row == baseRow && (move->source().col == 0 || move->source().col == 7)) {
+            auto castleSide = (move->source().col == 0 ? CastleSide::QUEENSIDE : CastleSide::KINGSIDE);
+            if (castlingRights(move->color(), castleSide)) {
+                setCastlingRights(move->color(), castleSide, false);
+                move->setRuinedCastling(castleSide, true);
             }
         }
     }
@@ -526,12 +465,6 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
                 _pieces[Position::internalToIndex(Position(3, 7))] = Pieces::Piece::GetBlankPiece();
             }
         }
-        if (lastMove->color() == Color::WHITE) {
-            _whitePlayer.setHasCastled(false);
-        }
-        else {
-            _blackPlayer.setHasCastled(false);
-        }
     }
     else if (lastMove->isCapture()) {
         _pieces[startIndex] = _pieces[endIndex];
@@ -575,30 +508,9 @@ void Board::_undoMove(const std::shared_ptr<Move> & move) {
     _whosTurnToGo = lastMove->color();
     _halfMoveClock = _prevHalfmoveClock;
 
-    if (lastMove->ruinedCastling() == CastleSide::BOTH) {
-        if (lastMove->color() == Color::WHITE) {
-            _whitePlayer.setCastlingRightsKingSide(true);
-            _whitePlayer.setCastlingRightsQueenSide(true);
-        }
-        else {
-            _blackPlayer.setCastlingRightsKingSide(true);
-            _blackPlayer.setCastlingRightsQueenSide(true);
-        }
-    }
-    else if (lastMove->ruinedCastling() == CastleSide::KINGSIDE) {
-        if (lastMove->color() == Color::WHITE) {
-            _whitePlayer.setCastlingRightsKingSide(true);
-        }
-        else {
-            _blackPlayer.setCastlingRightsKingSide(true);
-        }
-    }
-    else if (lastMove->ruinedCastling() == CastleSide::QUEENSIDE) {
-        if (lastMove->color() == Color::WHITE) {
-            _whitePlayer.setCastlingRightsQueenSide(true);
-        }
-        else {
-            _blackPlayer.setCastlingRightsQueenSide(true);
+    for (int i = 0; i < 2; ++i) {
+        if (lastMove->ruinedCastling(i)) {
+            setCastlingRights(lastMove->color(), intToCastleSide(i), true);
         }
     }
 
@@ -839,19 +751,19 @@ void Board::_calculateFen() {
     }
     sstr << ' ';
     bool someoneCanCastle = false;
-    if (_whitePlayer.hasCastlingRightsKingSide()) {
+    if (castlingRights(Color::WHITE, CastleSide::KINGSIDE)) {
         sstr << 'K';
         someoneCanCastle = true;
     }
-    if (_whitePlayer.hasCastlingRightsQueenSide()) {
+    if (castlingRights(Color::WHITE, CastleSide::QUEENSIDE)) {
         sstr << 'Q';
         someoneCanCastle = true;
     }
-    if (_blackPlayer.hasCastlingRightsKingSide()) {
+    if (castlingRights(Color::BLACK, CastleSide::KINGSIDE)) {
         sstr << 'k';
         someoneCanCastle = true;
     }
-    if (_blackPlayer.hasCastlingRightsQueenSide()) {
+    if (castlingRights(Color::BLACK, CastleSide::QUEENSIDE)) {
         sstr << 'q';
         someoneCanCastle = true;
     }
