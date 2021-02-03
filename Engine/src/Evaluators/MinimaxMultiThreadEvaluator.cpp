@@ -3,7 +3,7 @@
 #include <cmath>
 #include <chrono>
 #include <sstream>
-#include "Engine/Evaluators/TotalPieceValueEvaluator.h"
+#include "Engine/Evaluators/MinimaxMultiThreadEvaluator.h"
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
 #include "Engine/Options.h"
@@ -18,7 +18,7 @@ using Gameplay::Move;
 const float HIGHTEST_EVAL = 100000.0;
 const float LOWEST_EVAL = -100000.0;
 
-void TotalPieceValueEvaluator::calculateBestMove() {
+void MinimaxMultiThreadEvaluator::calculateBestMove() {
     _searchDepth =_options->getSearchDepth();
     if (_searchDepth < 2) {
         _searchDepth = 2;
@@ -72,7 +72,7 @@ void TotalPieceValueEvaluator::calculateBestMove() {
     throw std::runtime_error("The evaluation result did not match any of the possible moves");
 }
 
-EvalMovePair TotalPieceValueEvaluator::_handleEndNode(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves) {
+EvalMovePair MinimaxMultiThreadEvaluator::_handleEndNode(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves) {
     float bestEval = (_board->whosTurnToGo() == Color::WHITE ? LOWEST_EVAL : HIGHTEST_EVAL);
     std::shared_ptr<Move> bestMove;
 
@@ -109,7 +109,7 @@ EvalMovePair TotalPieceValueEvaluator::_handleEndNode(const std::vector<std::sha
     return std::make_pair(bestEval, bestMove);
 }
 
-void TotalPieceValueEvaluator::_evaluateMoves(const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals) {
+void MinimaxMultiThreadEvaluator::_evaluateMoves(const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals) {
     for (auto & move : possibleMoves) {
 
         auto t1 = std::chrono::high_resolution_clock::now();
@@ -130,7 +130,7 @@ void TotalPieceValueEvaluator::_evaluateMoves(const MoveVector & possibleMoves, 
     }
 }
 
-void TotalPieceValueEvaluator::_selectNextBatchOfBestMoves(const OrderedEvalMoveMap & orderedMoves, const MoveVector & excludeMoves, MoveVector & selectedMoves) {
+void MinimaxMultiThreadEvaluator::_selectNextBatchOfBestMoves(const OrderedEvalMoveMap & orderedMoves, const MoveVector & excludeMoves, MoveVector & selectedMoves) {
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> stagingArea;
  
     if (orderedMoves.empty()) {
@@ -237,7 +237,7 @@ void TotalPieceValueEvaluator::_selectNextBatchOfBestMoves(const OrderedEvalMove
     }
 }
 
-bool TotalPieceValueEvaluator::_getBestEvaluatedMove(const OrderedEvalMoveMap & evaluatedMoves, bool isLevel0, EvalMovePair & bestEvaluatedMove) {
+bool MinimaxMultiThreadEvaluator::_getBestEvaluatedMove(const OrderedEvalMoveMap & evaluatedMoves, bool isLevel0, EvalMovePair & bestEvaluatedMove) {
     bool needMoreMoves = false;
     std::pair<float, std::shared_ptr<Move>> result;
 
@@ -288,7 +288,7 @@ bool TotalPieceValueEvaluator::_getBestEvaluatedMove(const OrderedEvalMoveMap & 
     return needMoreMoves;
 }
 
-EvalMovePair TotalPieceValueEvaluator::_calcBestEval(int numPliesLeft) {
+EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
 
     std::stringstream logPrefix;
     for (size_t i = 0; i < _searchDepth - 1 - numPliesLeft; ++i) {
@@ -402,7 +402,7 @@ EvalMovePair TotalPieceValueEvaluator::_calcBestEval(int numPliesLeft) {
     }
 }
 
-float TotalPieceValueEvaluator::_evaluateMoveSingle() {
+float MinimaxMultiThreadEvaluator::_evaluateMoveSingle() {
     float eval = 0.0;
     auto pieces = _board->pieces();
     for (auto & piece : pieces) {
@@ -442,7 +442,7 @@ float TotalPieceValueEvaluator::_evaluateMoveSingle() {
     return eval;
 }
 
-bool TotalPieceValueEvaluator::_compareFloat(float x, float y, float epsilon) {
+bool MinimaxMultiThreadEvaluator::_compareFloat(float x, float y, float epsilon) {
    if(fabs(x - y) < epsilon) {
       return true;
    }

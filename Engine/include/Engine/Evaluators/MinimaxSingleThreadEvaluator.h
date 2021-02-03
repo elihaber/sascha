@@ -17,9 +17,9 @@ typedef std::pair<float, std::shared_ptr<Sascha::Gameplay::Move>> EvalMovePair;
 typedef std::multimap<float, std::shared_ptr<Sascha::Gameplay::Move>> OrderedEvalMoveMap;
 typedef std::unordered_map<std::string, float> UnorderedMoveEvalMap;
 
-class TotalPieceValueEvaluator : public Evaluator {
+class MinimaxSingleThreadEvaluator : public Evaluator {
 public:
-    TotalPieceValueEvaluator(std::shared_ptr<Sascha::Engine::Options> options) : Evaluator(options) { }
+    MinimaxSingleThreadEvaluator(std::shared_ptr<Sascha::Engine::Options> options) : Evaluator(options) { }
 
     virtual void calculateBestMove() override;
 
