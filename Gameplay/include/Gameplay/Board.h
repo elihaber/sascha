@@ -76,7 +76,6 @@ private:
     void _handleMove(const std::shared_ptr<Move> & move);
     void _undoMove(const std::shared_ptr<Move> & move);
     void _calculateFen();
-    void _doubleCheckFen();
     bool _scanForCheck(bool otherPlayer = false);
 
     std::vector<std::shared_ptr<Pieces::Piece>> _pieces;
