@@ -149,8 +149,8 @@ void Move::_calculateAlgebraicFormat() {
 }
 
 void Move::_calculateInternalValues() {
-    Position::algebraicToInternal(_uciFormat.substr(0, 2), _source);
-    Position::algebraicToInternal(_uciFormat.substr(2, 4), _target);
+    Position::uciToInternal(_uciFormat.substr(0, 2), _source);
+    Position::uciToInternal(_uciFormat.substr(2, 4), _target);
     if (_uciFormat.size() == 5) {
         _isPromotion = true;
         if (_uciFormat[4] == 'q') {

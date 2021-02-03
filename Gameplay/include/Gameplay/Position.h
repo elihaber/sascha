@@ -16,14 +16,14 @@ public:
     Position() : col(-1), row(-1) { }
     Position(int aCol, int aRow) : col(aCol), row(aRow) { }
 
-    static void algebraicToInternal(const std::string & alg, Position & pos) {
-        pos.col = (char)alg[0] - 'a';
-        pos.row = (char)alg[1] - '1';
+    static void uciToInternal(const std::string & uci, Position & pos) {
+        pos.col = (char)uci[0] - 'a';
+        pos.row = (char)uci[1] - '1';
     }
 
-    static void internalToAlgebraic(const Position & pos, std::string & alg) {
-        alg = ('a' + (char)pos.col);
-        alg += ('1' + (char)pos.row);
+    static void internalToUci(const Position & pos, std::string & uci) {
+        uci = ('a' + (char)pos.col);
+        uci += ('1' + (char)pos.row);
     }
 
     static int internalToIndex(const Position & pos) {
@@ -35,16 +35,16 @@ public:
         pos.row = index / 8;
     }
 
-    static int algebraicToIndex(const std::string & alg) {
+    static int uciToIndex(const std::string & uci) {
         Position pos;
-        algebraicToInternal(alg, pos);
+        uciToInternal(uci, pos);
         return internalToIndex(pos);
     }
 
-    static void indexToAlgebraic(int index, std::string & alg) {
+    static void indexToUci(int index, std::string & uci) {
         Position pos;
         indexToInternal(index, pos);
-        internalToAlgebraic(pos, alg);
+        internalToUci(pos, uci);
     }
 
     static bool areSquaresTouching(const Position & pos1, const Position & pos2) {
@@ -69,7 +69,6 @@ public:
     }
 
     static bool areSquaresKnightsMoveFromEachOther(const Position & pos1, const Position & pos2) {
-//        MAINLOG("First: " << abs(pos1.col - pos2.col) << " second: " << abs(pos1.row - pos2.row) << " third: " << abs(pos1.col - pos2.col) << " fourth: " << abs(pos1.row - pos2.row))
         return ((abs(pos1.col - pos2.col) == 2 &&  abs(pos1.row - pos2.row) == 1) ||
                 (abs(pos1.col - pos2.col) == 1 &&  abs(pos1.row - pos2.row) == 2));
     }

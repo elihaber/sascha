@@ -14,17 +14,19 @@ namespace Gameplay {
 
 void Board::setUpFromFen(const std::string & fen) {
     MAINLOG("Setting up board from FEN: " << fen)
+
     _pieces.clear();
     _gameHistory.clear();
     _gameHistory.addStartupFen(fen);
-    Piece::CreateBlankPiece(shared_from_this());
+    
+    Piece::CreateBlankPiece(shared_from_this()); // TODO: This should not be necessary -- the Piece class should automatically create the BlankPiece object.
     _pieces.clear();
     for (size_t i = 0; i < 64; ++i) {
         Position pos;
         Position::indexToInternal(i, pos);
         _pieces.push_back(Pieces::Piece::GetBlankPiece());
     }
-    //_pieces.assign(64, blankPiece);
+    
     int pos = 0;
     int col = 0;
     int row = 7;
@@ -140,7 +142,7 @@ void Board::setUpFromFen(const std::string & fen) {
     }
     else {
         _hasEnPassantTarget = true;
-        Position::algebraicToInternal(fen.substr(pos, pos + 2), _enPassantTarget);
+        Position::uciToInternal(fen.substr(pos, pos + 2), _enPassantTarget);
         currChar = fen[++pos];
     }
 
@@ -773,7 +775,7 @@ void Board::_calculateFen() {
     sstr << ' ';
     if (_hasEnPassantTarget) {
         std::string pos;
-        Position::internalToAlgebraic(_enPassantTarget, pos);
+        Position::internalToUci(_enPassantTarget, pos);
         sstr << pos;
     }
     else {
