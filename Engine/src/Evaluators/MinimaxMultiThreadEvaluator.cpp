@@ -3,10 +3,15 @@
 #include <cmath>
 #include <chrono>
 #include <sstream>
+#include <algorithm>
+#include <functional>
+#include <thread>
 #include "Engine/Evaluators/MinimaxMultiThreadEvaluator.h"
 #include "Gameplay/Board.h"
 #include "Gameplay/Move.h"
 #include "Engine/Options.h"
+
+using namespace std::chrono_literals;
 
 namespace Sascha {
 namespace Engine {
@@ -40,7 +45,7 @@ void MinimaxMultiThreadEvaluator::calculateBestMove() {
     float _currEval = _evaluateMoveSingle();
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    auto result = _calcBestEval(_searchDepth - 1);
+    auto result = _calcBestEval(_board, _searchDepth - 1);
     auto t2 = std::chrono::high_resolution_clock::now();
     _totalTime = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 
@@ -72,14 +77,14 @@ void MinimaxMultiThreadEvaluator::calculateBestMove() {
     throw std::runtime_error("The evaluation result did not match any of the possible moves");
 }
 
-EvalMovePair MinimaxMultiThreadEvaluator::_handleEndNode(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves) {
-    float bestEval = (_board->whosTurnToGo() == Color::WHITE ? LOWEST_EVAL : HIGHTEST_EVAL);
+EvalMovePair MinimaxMultiThreadEvaluator::_handleEndNode(std::shared_ptr<Board> board, const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves) {
+    float bestEval = (board->whosTurnToGo() == Color::WHITE ? LOWEST_EVAL : HIGHTEST_EVAL);
     std::shared_ptr<Move> bestMove;
 
     for (auto & move : possibleMoves) {
 
         auto t1 = std::chrono::high_resolution_clock::now();
-        _board->handleMoveForSingleAnalysis(move);
+        board->handleMoveForSingleAnalysis(move);
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
         _totalHandle1Time += duration;
@@ -87,12 +92,12 @@ EvalMovePair MinimaxMultiThreadEvaluator::_handleEndNode(const std::vector<std::
         float eval = _evaluateMoveSingle();
 
         t1 = std::chrono::high_resolution_clock::now();
-        _board->undoSingleAnalysisMove(move);
+        board->undoSingleAnalysisMove(move);
         t2 = std::chrono::high_resolution_clock::now();
         duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
         _totalUndo1Time += duration;
 
-        if (_board->whosTurnToGo() == Color::WHITE) {
+        if (board->whosTurnToGo() == Color::WHITE) {
             if (eval > bestEval) {
                 bestEval = eval;
                 bestMove = move;
@@ -109,11 +114,11 @@ EvalMovePair MinimaxMultiThreadEvaluator::_handleEndNode(const std::vector<std::
     return std::make_pair(bestEval, bestMove);
 }
 
-void MinimaxMultiThreadEvaluator::_evaluateMoves(const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals) {
+void MinimaxMultiThreadEvaluator::_evaluateMoves(std::shared_ptr<Board> board, const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals) {
     for (auto & move : possibleMoves) {
 
         auto t1 = std::chrono::high_resolution_clock::now();
-        _board->handleMoveForSingleAnalysis(move);
+        board->handleMoveForSingleAnalysis(move);
         auto t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
         _totalHandle2Time += duration;
@@ -123,7 +128,7 @@ void MinimaxMultiThreadEvaluator::_evaluateMoves(const MoveVector & possibleMove
         moveAPrioriEvals.insert(std::make_pair(move->algebraicFormat(), eval));
 
         t1 = std::chrono::high_resolution_clock::now();
-        _board->undoSingleAnalysisMove(move);
+        board->undoSingleAnalysisMove(move);
         t2 = std::chrono::high_resolution_clock::now();
         duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
         _totalUndo2Time += duration;
@@ -288,24 +293,75 @@ bool MinimaxMultiThreadEvaluator::_getBestEvaluatedMove(const OrderedEvalMoveMap
     return needMoreMoves;
 }
 
-EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
+void MinimaxMultiThreadEvaluator::_searchDeeper(std::shared_ptr<Gameplay::Move> move, std::shared_ptr<Gameplay::Board> board, int numPliesLeft, OrderedEvalMoveMap & result, MoveVector & testedMoves) {
+    std::stringstream logPrefix;
+    for (size_t i = 0; i < _searchDepth - 1 - numPliesLeft; ++i) {
+        logPrefix << "    ";
+    }
+
+    RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Testing move: " << move->algebraicFormat())
+    MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Testing move: " << move->algebraicFormat())
+
+    std::shared_ptr<Board> localBoard(board->clone());
+
+//    RECURSIONLOG( "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " About to handle move: " << move->algebraicFormat())
+//    MAINLOG("Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " About to handle move: " << move->algebraicFormat())
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    localBoard->handleMoveForFullAnalysis(move);
+    auto t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    _totalHandle3Time += duration;
+
+//    RECURSIONLOG( "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " About to recurse move: " << move->algebraicFormat())
+//    MAINLOG("Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " About to recurse move: " << move->algebraicFormat())
+
+    _currentLine.push_back(move);
+    float moveEval = _calcBestEval(localBoard, numPliesLeft - 1).first;
+    t1 = std::chrono::high_resolution_clock::now();
+    localBoard->undoFullAnalysisMove(move);
+    t2 = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+    _totalUndo3Time += duration;
+
+//    RECURSIONLOG( "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Done recursing move: " << move->algebraicFormat())
+//    MAINLOG("Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Done recursing move: " << move->algebraicFormat())
+
+    _currentLine.pop_back();
+    result.insert(std::make_pair(moveEval, move));
+    testedMoves.push_back(move);
+
+    RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Finished testing move: " << move->algebraicFormat() << " Eval: " << moveEval)
+    MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(move->color()) << " Finished testing move: " << move->algebraicFormat() << " Eval: " << moveEval)
+}
+
+void MinimaxMultiThreadEvaluator::_searchDeeperWrapper(std::shared_ptr<Gameplay::Move> move, std::shared_ptr<Gameplay::Board> board, int numPliesLeft, OrderedEvalMoveMap & result, MoveVector & testedMoves) {
+    std::thread searchThread(MinimaxMultiThreadEvaluator::_searchDeeper, this, move, board, numPliesLeft, std::ref(result), std::ref(testedMoves));
+    searchThread.detach();
+}
+
+EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(std::shared_ptr<Board> board, int numPliesLeft) {
+    //std::shared_ptr<Board> localBoard(board->clone());
 
     std::stringstream logPrefix;
     for (size_t i = 0; i < _searchDepth - 1 - numPliesLeft; ++i) {
         logPrefix << "    ";
     }
 
-    auto possibleMoves = _board->getLegalMoves();
+    RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Entry")
+    MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Entry")
+
+    auto possibleMoves = board->getLegalMoves();
 
     // Set the best eval to a bad value so that any value we get from a move will beat it.
-    float bestEval = (_board->whosTurnToGo() == Color::WHITE ? LOWEST_EVAL : HIGHTEST_EVAL);
+    float bestEval = (board->whosTurnToGo() == Color::WHITE ? LOWEST_EVAL : HIGHTEST_EVAL);
 
     if (numPliesLeft == 0) {
         // If we are here then we have reached the deepest level we will analyze, so all we can do
         // is test out each move and do an immediate evaluation of the result -- we can't go any
         // deeper.
 
-        auto bestEvalAndMove = _handleEndNode(possibleMoves);
+        auto bestEvalAndMove = _handleEndNode(board, possibleMoves);
 
         RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestEvalAndMove.second->color()) << " Single evaluation for white -- Move: " << bestEvalAndMove.second->algebraicFormat() << " Eval: " << bestEvalAndMove.first)
         MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestEvalAndMove.second->color()) << " Single evaluation for white -- Move: " << bestEvalAndMove.second->algebraicFormat() << " Eval: " << bestEvalAndMove.first)
@@ -318,7 +374,7 @@ EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
 
         OrderedEvalMoveMap orderedMoves;
         UnorderedMoveEvalMap moveAPrioriEvals;
-        _evaluateMoves(possibleMoves, orderedMoves, moveAPrioriEvals);
+        _evaluateMoves(board, possibleMoves, orderedMoves, moveAPrioriEvals);
 
         OrderedEvalMoveMap evaluatedBestMoves;
         MoveVector alreadyTestedMoves;
@@ -338,9 +394,9 @@ EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
                 throw std::runtime_error("ERROR: Ordered moves is not empty but best moves is");
             }
             else {
-                if (_board->isCheck()) {
+                if (board->isCheck()) {
                     // Checkmate
-                    if (_board->whosTurnToGo() == Color::WHITE) {
+                    if (board->whosTurnToGo() == Color::WHITE) {
                         return std::make_pair(LOWEST_EVAL, nullptr);
                     }
                     else {
@@ -357,31 +413,26 @@ EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
             
             // Note: bestMoves cannot be empty at this point
 
-            for (int i = 0; i < bestMoves.size(); ++i) {
-                RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
-                MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " A Priory Eval: " << moveAPrioriEvals[bestMoves[i]->algebraicFormat()])
-
-                auto t1 = std::chrono::high_resolution_clock::now();
-                _board->handleMoveForFullAnalysis(bestMoves[i]);
-                auto t2 = std::chrono::high_resolution_clock::now();
-                auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-                _totalHandle3Time += duration;
-
-                _currentLine.push_back(bestMoves[i]);
-                float moveEval = _calcBestEval(numPliesLeft - 1).first;
-
-                t1 = std::chrono::high_resolution_clock::now();
-                _board->undoFullAnalysisMove(bestMoves[i]);
-                t2 = std::chrono::high_resolution_clock::now();
-                duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-                _totalUndo3Time += duration;
-
-                _currentLine.pop_back();
-                evaluatedBestMoves.insert(std::make_pair(moveEval, bestMoves[i]));
-                alreadyTestedMoves.push_back(bestMoves[i]);
-                RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
-                MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Player: " << colorToString(bestMoves[i]->color()) << " Finished testing move " << i << " out of " << bestMoves.size() << " -- Move: " << bestMoves[i]->algebraicFormat() << " Eval: " << moveEval)
+            RECURSIONLOG_NNL(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Before for_each, moves are:")
+            MAINLOG_NNL(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " Before for_each, moves are:")
+            for (auto aMove : bestMoves) {
+                RECURSIONLOG_NNL(" " << aMove->algebraicFormat())
+                MAINLOG_NNL(" " << aMove->algebraicFormat())
             }
+            RECURSIONLOG("")
+            MAINLOG("")
+
+            int targetEvaluatedMovesSize = evaluatedBestMoves.size() + bestMoves.size();
+
+//            auto f = std::bind(&MinimaxMultiThreadEvaluator::_searchDeeper, this, std::placeholders::_1, board, numPliesLeft, evaluatedBestMoves, alreadyTestedMoves);
+            for_each(bestMoves.begin(), bestMoves.end(), std::bind(&MinimaxMultiThreadEvaluator::_searchDeeperWrapper, this, std::placeholders::_1, board, numPliesLeft, std::ref(evaluatedBestMoves), std::ref(alreadyTestedMoves)));
+
+            while (evaluatedBestMoves.size() < targetEvaluatedMovesSize) {
+                std::this_thread::sleep_for(100ms);
+            }
+
+            RECURSIONLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " After wait")
+            MAINLOG(logPrefix.str() << "Level: " << (_searchDepth - 1 - numPliesLeft) << " After wait")
 
             // Note: evaluatedBestMoves cannot be empty at this point
 
@@ -389,12 +440,17 @@ EvalMovePair MinimaxMultiThreadEvaluator::_calcBestEval(int numPliesLeft) {
             bool needMoreMoves = _getBestEvaluatedMove(evaluatedBestMoves, (_searchDepth - 1 - numPliesLeft == 0), bestEvaluatedMove);
 
             if (needMoreMoves && alreadyTestedMoves.size() < orderedMoves.size()) {
+                if (_searchDepth - 1 - numPliesLeft != 0) {
+                    RECURSIONLOG("ERROR: Trying to find more candidate moves but level is not zero")
+                    MAINLOG("ERROR: Trying to find more candidate moves but level is not zero")
+                    throw std::runtime_error("ERROR: Trying to find more candidate moves but level is not zero");
+                }
                 continue;
             }
 
             if (_searchDepth - 1 - numPliesLeft == 0) {
-                RECURSIONLOG("Returning move " << bestEvaluatedMove.second->algebraicFormat() << " with eval " << bestEvaluatedMove.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves")
-                MAINLOG("Returning move " << bestEvaluatedMove.second->algebraicFormat() << " with eval " << bestEvaluatedMove.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves")
+                RECURSIONLOG(logPrefix.str() << "Returning move " << bestEvaluatedMove.second->algebraicFormat() << " with eval " << bestEvaluatedMove.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves")
+                MAINLOG(logPrefix.str() << "Returning move " << bestEvaluatedMove.second->algebraicFormat() << " with eval " << bestEvaluatedMove.first << " (current eval is " << _currEval << ") Tested " << alreadyTestedMoves.size() << " moves out of " << orderedMoves.size() << " possible moves")
             }
 
             return bestEvaluatedMove;

@@ -82,5 +82,30 @@ bool GameHistory::lastPromotedPawn(std::shared_ptr<Pieces::Piece> & piece) const
     return true;
 }
 
+GameHistory GameHistory::clone() const {
+    GameHistory clone;
+    //std::shared_ptr<GameHistory> clone = std::make_shared<GameHistory>();
+    clone.setFens(std::stack<std::string>(_fens));
+    clone.setMoves(std::stack<std::shared_ptr<Move>>(_moves));
+    clone.setCapturedPieces(std::stack<std::shared_ptr<Pieces::Piece>>(_capturedPieces));
+    clone.setPromotedPawns(std::stack<std::shared_ptr<Pieces::Piece>>(_promotedPawns));
+    return clone;
+}
+
+void GameHistory::copy_reverse(std::stack<std::string> & source, std::stack<std::string> & dest) {
+    while(!source.empty()) {
+        dest.push(std::string(source.top()));
+        source.pop();
+    }
+}
+
+
+void GameHistory::CopyStack(const std::stack<std::string> & source, std::stack<std::string> & target) {
+    std::stack<std::string> tmpCopy(source);
+    std::stack<std::string> tmp;
+    copy_reverse(tmpCopy, tmp);
+    copy_reverse(tmp, target);
+}
+
 }
 }

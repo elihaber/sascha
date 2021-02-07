@@ -28,14 +28,13 @@ public:
     virtual bool calculateHasLegalMove() const = 0;
     virtual bool isAttackingSquare(const Position & square) const = 0;
     void setPieceType(PieceType val) { _pieceType = val; }
+    std::shared_ptr<Piece> clone(std::shared_ptr<Board> board) const;
 
     static std::shared_ptr<Piece> createPiece(PieceType pieceType, Color color, int col, int row, std::shared_ptr<Board> board);
     static void CreateBlankPiece(std::shared_ptr<Board> board) { GenericBlankPiece = Piece::createPiece(PieceType::BLANK, Color::WHITE, 0, 0, board); }
     static std::shared_ptr<Piece> GetBlankPiece() { return GenericBlankPiece; }
 protected:
     static std::shared_ptr<Piece> GenericBlankPiece;
-    int _maxVal;
-    bool _isOnBoard;
     Color _color;
     Position _position;
     PieceType _pieceType;

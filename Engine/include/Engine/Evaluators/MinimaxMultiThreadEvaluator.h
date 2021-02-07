@@ -24,14 +24,20 @@ public:
     virtual void calculateBestMove() override;
 
 private:
-    EvalMovePair _calcBestEval(int numPliesLeft);
+    void _dummy(std::shared_ptr<Gameplay::Move> move, std::shared_ptr<Sascha::Gameplay::Board> board, int a, OrderedEvalMoveMap & result) {}
+    EvalMovePair _calcBestEval(std::shared_ptr<Sascha::Gameplay::Board> board, int numPliesLeft);
     float _evaluateMoveSingle();
     bool _compareFloat(float x, float y, float epsilon = 0.001f);
 
-    EvalMovePair _handleEndNode(const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves);
-    void _evaluateMoves(const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals);
+    EvalMovePair _handleEndNode(std::shared_ptr<Sascha::Gameplay::Board> board, const std::vector<std::shared_ptr<Sascha::Gameplay::Move>> & possibleMoves);
+    void _evaluateMoves(std::shared_ptr<Sascha::Gameplay::Board> board, const MoveVector & possibleMoves, OrderedEvalMoveMap & orderedMoves, UnorderedMoveEvalMap & moveAPrioriEvals);
     void _selectNextBatchOfBestMoves(const OrderedEvalMoveMap & orderedMoves, const MoveVector & excludeMoves, MoveVector & selectedMoves);
     bool _getBestEvaluatedMove(const OrderedEvalMoveMap & evaluatedMoves, bool isLevel0, EvalMovePair & bestEvaluatedMove);
+    void _searchDeeperWrapper(std::shared_ptr<Gameplay::Move> move, std::shared_ptr<Gameplay::Board> board, int numPliesLeft, OrderedEvalMoveMap & result, MoveVector & testedMoves);
+    void _searchDeeper(std::shared_ptr<Gameplay::Move> move, std::shared_ptr<Gameplay::Board> board, int numPliesLeft, OrderedEvalMoveMap & result, MoveVector & testedMoves);
+    
+    void _addEvaluatedBestMove(EvalMovePair item) {}
+    void _addAlreadyTestedMove(std::shared_ptr<Sascha::Gameplay::Move> move) {}
 
     float _currEval;
     std::vector<std::shared_ptr<Sascha::Gameplay::Move>> _currentLine;

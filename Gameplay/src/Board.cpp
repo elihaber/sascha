@@ -481,6 +481,9 @@ bool Board::_scanForCheck(bool otherPlayer) {
         }
     }
 
+    if (!king) {
+        throw std::runtime_error("ERROR: Failed to find king");
+    }
     return isSquareAttacked(king->position(), oppositeColor(king->color()));
 }
 
@@ -737,6 +740,41 @@ std::vector<std::shared_ptr<Piece>> Board::getAllAttackerOfTypeOnSquare(PieceTyp
     }
 
     return attackers;
+}
+
+std::shared_ptr<Board> Board::clone() const {
+    auto clone = std::make_shared<Board>();
+    clone->addAllPieces(_pieces);
+    clone->setWhosTurnToGo(_whosTurnToGo);
+    clone->setHasEnPassantTarget(_hasEnPassantTarget);
+    if (_hasEnPassantTarget) {
+        clone->setEnPassantTarget(_enPassantTarget);
+    }
+    clone->setHalfMoveClock(_halfMoveClock);
+    clone->setFullMoveNumber(_fullMoveNumber);
+    clone->setIsCheck(_isCheck);
+    clone->setFen(_fen);
+    clone->setGameHistory(_gameHistory.clone());
+    clone->addAllLegalMoves(_legalMoves);
+    clone->setHasLegalMove(_hasLegalMove);
+    clone->setCastlingRights(const_cast<bool*>(_castlingRights));
+    clone->setCastled(const_cast<bool*>(_castled));
+    clone->setPrevHalfmoveClock(_prevHalfmoveClock);
+
+    return clone;
+}
+
+void Board::addAllPieces(std::vector<std::shared_ptr<Pieces::Piece>> pieces) {
+    _pieces.clear();
+    for (auto & piece : pieces) {
+        if (piece->pieceType() == PieceType::BLANK) {
+            _pieces.push_back(piece);
+        }
+        else {
+            auto newPiece = piece->clone(shared_from_this());
+            _pieces.push_back(newPiece);
+        }
+    }
 }
 
 }

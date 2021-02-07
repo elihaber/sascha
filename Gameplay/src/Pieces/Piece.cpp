@@ -39,6 +39,10 @@ std::shared_ptr<Piece> Piece::createPiece(PieceType pieceType, Color color, int 
     throw std::runtime_error("Incorrect type of piece to create");
 }
 
+std::shared_ptr<Piece> Piece::clone(std::shared_ptr<Board> board) const {
+    return Piece::createPiece(_pieceType, _color, _position.col, _position.row, board);
+}
+
 }
 }
 }

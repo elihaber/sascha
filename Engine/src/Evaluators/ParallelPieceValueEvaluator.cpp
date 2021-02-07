@@ -60,7 +60,7 @@ void ParallelPieceValueEvaluator::_searchDeeper(std::shared_ptr<Gameplay::Move> 
 }
 
 std::pair<float, std::shared_ptr<Move>> ParallelPieceValueEvaluator::_calcBestEval(std::shared_ptr<Board> board, int numPliesLeft) {
-    std::shared_ptr<Board> localBoard(board);
+    std::shared_ptr<Board> localBoard(board->clone());
 
     std::string logPrefix;
     for (size_t i = 0; i < RECURSION_LEVEL - numPliesLeft; ++i) {

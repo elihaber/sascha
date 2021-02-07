@@ -1,6 +1,7 @@
 #include "Engine/Evaluators/Evaluator.h"
 #include "Engine/Evaluators/RandomEvaluator.h"
 #include "Engine/Evaluators/MinimaxSingleThreadEvaluator.h"
+#include "Engine/Evaluators/MinimaxMultiThreadEvaluator.h"
 #include "Globals.h"
 #include "Engine/Options.h"
 
@@ -11,7 +12,7 @@ namespace Evaluators {
 
 std::shared_ptr<Evaluator> Evaluator::createEvaluator(std::shared_ptr<Engine::Options> options) {
     if (options->getAlgorithm() == Algorithm::MINIMAX) {
-        return std::make_shared<MinimaxSingleThreadEvaluator>(options);
+        return std::make_shared<MinimaxMultiThreadEvaluator>(options);
     }
     else if (options->getAlgorithm() == Algorithm::RANDOM) {
         return std::make_shared<RandomEvaluator>(options);

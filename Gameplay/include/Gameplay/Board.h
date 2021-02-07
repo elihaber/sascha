@@ -71,6 +71,23 @@ public:
     void _calculateHasLegalMove();
     bool castlingRights(Color color, CastleSide castleSide) const { return _castlingRights[colorToInt(color) * 2 + castleSideToInt(castleSide)]; }
     void setCastlingRights(Color color, CastleSide castleSide, bool val) { _castlingRights[colorToInt(color) * 2 + castleSideToInt(castleSide)] = val; }
+    std::shared_ptr<Board> clone() const;
+
+    // Setters for cloning
+    void addAllPieces(std::vector<std::shared_ptr<Pieces::Piece>> pieces);
+    void setWhosTurnToGo(Color val) { _whosTurnToGo = val; }
+    void setHasEnPassantTarget(bool val) { _hasEnPassantTarget = val; }
+    void setEnPassantTarget(Position val) { _enPassantTarget = val; }
+    void setHalfMoveClock(int val) { _halfMoveClock = val; }
+    void setFullMoveNumber(int val) { _fullMoveNumber = val; }
+    void setIsCheck(bool val) { _isCheck = val; }
+    void setFen(const std::string & val) { _fen = val; }
+    void setGameHistory(GameHistory val) { _gameHistory = val; }
+    void addAllLegalMoves(std::vector<std::shared_ptr<Move>> moves) { _legalMoves.insert(_legalMoves.end(), moves.begin(), moves.end()); }
+    void setHasLegalMove(bool val) { _hasLegalMove = val; }
+    void setCastlingRights(bool * val) { for (int i = 0; i < 4; ++i) { _castlingRights[i] = val[i]; } }
+    void setCastled(bool * val) { for (int i = 0; i < 2; ++i) { _castled[i] = val[i]; } }
+    void setPrevHalfmoveClock(int val) { _prevHalfmoveClock = val; }
 
 private:
     void _handleMove(const std::shared_ptr<Move> & move);
